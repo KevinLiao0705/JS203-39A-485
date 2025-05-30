@@ -12,14 +12,22 @@
         .include "p24ep64gp206.inc"
 
 ;BY DEFINE=============================
-;	.EQU JS203_39A_K01_01	,1
-        .EQU JS203_39A_C01_03   ,1
+;	.EQU JS203_39A_F01_02	,1      ;sspa driver
+;	.EQU JS203_39A_L01_02	,1      ;LA
+;       .EQU JS203_39A_C01_04   ,1      ;FIBER
+;       .EQU JS203_39A_K01_01   ,1     ;io
+        .EQU JS203_39A_K01_02   ,1     ;io
+;       .EQU JS203_39A_M01_01   ,1     ;RF
+;
+;	.EQU 	DEBUG_SLOT_ID_K	        ,0x0001
 
 ;======================================
 ;====================================
 	.EQU	VER0_K		,'1'
 	.EQU	VER1_K		,'0'
-;	.EQU 	DEBUG_SERIAL_ID_K	,0x0000
+
+        .EQU    DEVICE_ID_K             ,0x2536 ;
+        .EQU    SON_DEVICE_ID_K         ,0x2537 ;
 	.EQU 	SERIAL_ID_K		,0x0000
 
 	.EQU 	PCUI_DEVICE_ID_K	,0x2403	
@@ -58,6 +66,10 @@
     	.global __IC3Interrupt    
 .MACRO 	LDPTR XX
     	MOV #tbloffset(\XX),W1
+.ENDM
+
+.MACRO 	LDPTR3 XX
+    	MOV #tbloffset(\XX),W3
 .ENDM
 
 
@@ -166,19 +178,21 @@ DEBUG_CNT1:		.SPACE 2
 DEBUG_CNT2:		.SPACE 2
 DEBUG_CNT3:		.SPACE 2
 DEBUG_CNT4:		.SPACE 2
-UTX_MODE:		.SPACE 2		
 
-I2C_DATA0:		.SPACE 2		
-I2C_DATA1:		.SPACE 2		
-I2C_DATA2:		.SPACE 2		
-
-I2C_DATA0_B:		.SPACE 2		
-I2C_DATA1_B:		.SPACE 2		
-I2C_DATA2_B:		.SPACE 2		
 F24_ADR:		.SPACE 2		
 F24_LEN:		.SPACE 2		
 
-SELF_SERIAL_ID:		.SPACE 2		
+MY_SLOT_ID:		.SPACE 2		
+MY_ITEM_ID:		.SPACE 2
+MY_TYPE_ID:		.SPACE 2		
+SON_SERIAL_ID:		.SPACE 2
+SLOT_STATUS:		.SPACE 2		
+SLOT_TEST_STATUS:	.SPACE 2		
+SLOT_TEST_TIM:	        .SPACE 2		
+CONN485_TIM:	        .SPACE 2		
+
+		
+
 
 U2TXACT_INX:		.SPACE 2		
 U2TXACT_PARA0:		.SPACE 2		
@@ -186,33 +200,44 @@ U2TXACT_PARA1:		.SPACE 2
 U2TXACT_PARA2:		.SPACE 2		
 U2TXACT_PARA3:		.SPACE 2		
 U2RX_PACK_TIME:		.SPACE 2
+U2TX_REPEAT_TIM:       .SPACE 2
+
+EMU_U2TX_CNT:       .SPACE 2
+EMU_U2TX_TIM:       .SPACE 2
+EMU_U2TX_BYTE:       .SPACE 2
+
+
 UTX_FLAG:		.SPACE 2
 SW1_FLAG:		.SPACE 2
-ALLSLOT_INF_ADR:	.SPACE 128
-SLOTSTA_FLAG:		.SPACE 2		
-CHANNEL_FLAG:		.SPACE 2		
-IPADR0:			.SPACE 2
-IPADR1:			.SPACE 2
-LEDPNL_FLAG0:		.SPACE 2
-LEDPNL_FLAG1:		.SPACE 2
-LEDPNL_FLAG2:		.SPACE 2
-LEDPNL_FLAG3:		.SPACE 2
 
-UTXCHN_FLAG:		.SPACE 2
-
-SCMDINX:		.SPACE 2
+SSPA_RFOP:		.SPACE 2
+SSPA_TEMP:		.SPACE 2
+SSPA_FLAG:		.SPACE 2
+V50VADI:		.SPACE 2
+I50VADI:		.SPACE 2
+T50VADI:		.SPACE 2
+V32VADI:		.SPACE 2
+I32VADI:		.SPACE 2
+T32VADI:		.SPACE 2
+PS_FLAG:		.SPACE 2
 
 
-
+GPS_DATA_LEN:		.SPACE 2
 
 
 ;;====================================
 TMR2_BUF:		.SPACE 2		
 TMR2_FLAG:		.SPACE 2		
 TMR2_IORF:		.SPACE 2
-shiftFlag:		.SPACE 2
-shiftTime:		.SPACE 2
+SHIFT_FLAG:		.SPACE 2
+SHIFT_TIM:		.SPACE 2
 TMR2H_BUF:		.SPACE 2
+
+TMR3_BUF:		.SPACE 2		
+TMR3_FLAG:		.SPACE 2		
+TMR3_IORF:		.SPACE 2
+
+
 
 PWRON_TIM:		.SPACE 2
 RESET_TIM:		.SPACE 2
@@ -247,15 +272,22 @@ CMDTIME:		.SPACE 2
 CMDCNT0:		.SPACE 2
 CMDCNT1:		.SPACE 2
 
+DELAY_ACT_TIM:		.SPACE 2
+DELAY_ACT:		.SPACE 2
 
+TX_DEVICE_ID:		.SPACE 2
+TX_SERIAL_ID:		.SPACE 2
+TX_GROUP_ID:		.SPACE 2
 
+SLOT_POS:		.SPACE 2
 
 
 
 
 ;;====================================
-TARGET_DEVICE_ID:	.SPACE 2
-TARGET_SERIAL_ID:	.SPACE 2
+RX_DEVICE_ID:	        .SPACE 2
+RX_SERIAL_ID:	        .SPACE 2
+RX_GROUP_ID:	        .SPACE 2
 
 CONVAD_CNT:		.SPACE 2
 VR1BUF:			.SPACE 2
@@ -340,6 +372,7 @@ U1RX_TMP0:		.SPACE 2
 U1RX_TMP1:		.SPACE 2
 U1RXT:			.SPACE 2
 ;;====================================
+U2RX_BYTE_PTR0:		.SPACE 2
 U2RX_BYTE_PTR:		.SPACE 2
 U2RXA_LEN:		.SPACE 2
 U2RXB_LEN:		.SPACE 2
@@ -351,67 +384,33 @@ U2RX_ADDSUM:		.SPACE 2
 U2RX_TMP0:		.SPACE 2
 U2RX_TMP1:		.SPACE 2
 U2RXT:			.SPACE 2
-U2TX_WAKE_TIM:		.SPACE 2
 ;;====================================
-MCUU1_MODE:		.SPACE 2
-MCUTX1_TIM:		.SPACE 2
-MCUTX1_BIT_CNT:		.SPACE 2
-MCUTX1_BIT_LEN:		.SPACE 2
-MCUTX1_BYTE_CNT:	.SPACE 2
-MCUTX1_BYTE_LEN:	.SPACE 2
-MCURX1_TIM:		.SPACE 2
-MCURX1_IBUF:		.SPACE 2
-MCURX1_BIT_CNT:		.SPACE 2
-MCURX1_BIT_LEN:		.SPACE 2
-MCURX1_BYTE_LEN:	.SPACE 2
-MCURX1_BYTE_PTR:	.SPACE 2
-MCURX1_XORSUM:		.SPACE 2
-MCURX1_ADDSUM:		.SPACE 2
-MCURX1_TMP0:		.SPACE 2
-MCURX1_TMP1:		.SPACE 2
 ;;====================================
-MCUU2_MODE:		.SPACE 2
-MCUTX2_TIM:		.SPACE 2
-MCUTX2_BIT_CNT:		.SPACE 2
-MCUTX2_BIT_LEN:		.SPACE 2
-MCUTX2_BYTE_CNT:	.SPACE 2
-MCUTX2_BYTE_LEN:	.SPACE 2
-MCURX2_TIM:		.SPACE 2
-MCURX2_IBUF:		.SPACE 2
-MCURX2_BIT_CNT:		.SPACE 2
-MCURX2_BIT_LEN:		.SPACE 2
-MCURX2_BYTE_LEN:	.SPACE 2
-MCURX2_BYTE_PTR:	.SPACE 2
-MCURX2_XORSUM:		.SPACE 2
-MCURX2_ADDSUM:		.SPACE 2
-MCURX2_TMP0:		.SPACE 2
-MCURX2_TMP1:		.SPACE 2
 ;;====================================
-MCUU3_MODE:		.SPACE 2
-MCUTX3_TIM:		.SPACE 2
-MCUTX3_BIT_CNT:		.SPACE 2
-MCUTX3_BIT_LEN:		.SPACE 2
-MCUTX3_BYTE_CNT:	.SPACE 2
-MCUTX3_BYTE_LEN:	.SPACE 2
-MCURX3_TIM:		.SPACE 2
-MCURX3_IBUF:		.SPACE 2
-MCURX3_BIT_CNT:		.SPACE 2
-MCURX3_BIT_LEN:		.SPACE 2
-MCURX3_BYTE_LEN:	.SPACE 2
-MCURX3_BYTE_PTR:	.SPACE 2
-MCURX3_XORSUM:		.SPACE 2
-MCURX3_ADDSUM:		.SPACE 2
-MCURX3_TMP0:		.SPACE 2
-MCURX3_TMP1:		.SPACE 2
 ;;====================================
 
 
+ADCH_CNT:		.SPACE 2		
+ADBUF_CNT:		.SPACE 2		
+ADBUF0:			.SPACE 2		
+ADBUF1:			.SPACE 2		
+ADBUF2:			.SPACE 2		
+ADBUF3:			.SPACE 2		
+ADTEST:			.SPACE 2		
+
+
+
+ADI0BUF:	        .SPACE 2		
+ADI1BUF:	        .SPACE 2		
+ADI2BUF:	        .SPACE 2		
+ADI3BUF:	        .SPACE 2		
+ADI4BUF:	        .SPACE 2
+LDFIBUF:                 .SPACE 2		
 
 
 ;;====================================
 RX_CH:			.SPACE 2
 RX_ADDR:		.SPACE 2
-RX_DEVICE_ID:		.SPACE 2
 RX_FLAGS:		.SPACE 2
 RX_LEN:			.SPACE 2
 RX_CMD:			.SPACE 2
@@ -435,6 +434,13 @@ UTX_CHKSUM0:		.SPACE 2
 UTX_CHKSUM1:		.SPACE 2	
 UTX_BTX:		.SPACE 2	
 UTX_BUFFER_LEN:		.SPACE 2	
+
+
+RS485_CMD:		.SPACE 2	
+RS485_CMD_PARA0:	.SPACE 2	
+RS485_CMD_PARA1:	.SPACE 2	
+RS485_CMD_PARA2:	.SPACE 2	
+RS485_CMD_PARA3:	.SPACE 2	
 
 
 
@@ -470,7 +476,11 @@ UTXTMP:			.SPACE 64
 URXTMP_LEN:		.SPACE 2
 UTXTMP_LEN:		.SPACE 2
 
-
+U2RX_PACK_PTR0:		.SPACE 2
+U2RX_PACK_PTR1:		.SPACE 2
+U2RX_PACK_BUF:		.SPACE 64
+LOOP_ADR_START:         .SPACE 2
+LOOP_ADR_END:           .SPACE 2
 
 
 
@@ -493,24 +503,35 @@ END_REG:		.SPACE 2
 .EQU U1RX_BUFA		,0x2000	;
 .EQU U1RX_BUFB		,0x2280	;
 .EQU U2RX_BUFSIZE	,256	;
-.EQU U2RX_BUFA		,0x2500	;
+.EQU U2RX_BUFA		,0x2500	;512
 .EQU U2RX_BUFB		,0x2600	;
 .EQU U1TX_BUF		,0x2700	;
 .EQU U2TX_BUF		,0x2800	;512
-.EQU FLASH_BUF		,0x2A00 ; 
-.EQU MCURX1_BUFSIZE	,128
-.EQU MCUTX1_BUFSIZE	,128
-.EQU MCUTX1_BUF		,0x2A00	;128
-.EQU MCURX1_BUF		,0x2A80	;128
-.EQU MCURX2_BUFSIZE	,128
-.EQU MCUTX2_BUFSIZE	,128
-.EQU MCUTX2_BUF		,0x2B00	;128
-.EQU MCURX2_BUF		,0x2B80	;128
-.EQU MCURX3_BUFSIZE	,128
-.EQU MCUTX3_BUFSIZE	,128
-.EQU MCUTX3_BUF		,0x2C00	;128
-.EQU MCURX3_BUF		,0x2C80	;128
-.EQU TMP_BUF		,0x2D00	;256
+.EQU SLOTINF_BUF	,0x2A00 ; 10WORD x4
+
+
+;DRIVER
+/*
+sspaPowerStatusAA[2][36]; 8BIT
+sspaPowerV50vAA[2][36];   12BIT      
+sspaPowerV50iAA[2][36];   12BIT      
+sspaPowerV50tAA[2][36];   12BIT               
+sspaPowerV32vAA[2][36];   12BIT      
+sspaPowerV32iAA[2][36];   12BIT      
+sspaPowerV32tAA[2][36];   12BIT      
+sspaModuleStatusAA[2][36];  8BIT      
+sspaModuleRfOutAA[2][36];   12BIT      
+sspaModuleTemprAA[2][36];   12BIT      
+*/
+
+
+
+
+
+
+
+
+.EQU GPS_DATA_BUF	,0x2B00	;64
 .EQU FLASH_TMP		,0x2C00	;512			
 .EQU F24TMP_BUF		,0x2C00	;512		
 
@@ -584,26 +605,26 @@ END_REG:		.SPACE 2
 .EQU UICON_F_P		,0
 .EQU CTRCON_F		,FLAGA
 .EQU CTRCON_F_P		,1
-;.EQU OLEDXALL_F		,FLAGA
-;.EQU OLEDXALL_F_P	,2
-;.EQU FLASH_AB_F		,FLAGA
-;.EQU FLASH_AB_F_P	,3
-;.EQU FLASH_QPI_F	,FLAGA
-;.EQU FLASH_QPI_F_P	,4
-;.EQU FLASH_QPI2_F	,FLAGA	
-;.EQU FLASH_QPI2_F_P	,5
-;.EQU SET_DIMS_F		,FLAGA
-;.EQU SET_DIMS_F_P	,6
-;.EQU KEYCODE_IN_F	,FLAGA
-;.EQU KEYCODE_IN_F_P	,7
+.EQU U1U2_F		,FLAGA
+.EQU U1U2_F_P	        ,2
+.EQU U1TXON_F		,FLAGA
+.EQU U1TXON_F_P         ,3
+.EQU U2TXON_F	        ,FLAGA
+.EQU U2TXON_F_P 	,4
+.EQU YES_F	        ,FLAGA	
+.EQU YES_F_P	        ,5
+.EQU CONN485_F	        ,FLAGA
+.EQU CONN485_F_P	,6
+;.EQU SLOT_ERR_F	,FLAGA
+;.EQU SLOT_ERR_F_P	,7
 .EQU ERR_F		,FLAGA
 .EQU ERR_F_P		,8
 .EQU OK_F		,FLAGA
 .EQU OK_F_P		,9
 .EQU DONE_F		,FLAGA
 .EQU DONE_F_P		,10
-;.EQU OK_F		,FLAGA
-;.EQU OK_F_P		,11
+;.EQU CLRGPS_F		,FLAGA
+;.EQU CLRGPS_F_P	,11
 ;EQU AICIO_AB_F		,FLAGA
 ;EQU AICIO_AB_F_P  	,12
 .EQU MASTER_U1RX_F	,FLAGA
@@ -652,10 +673,10 @@ END_REG:		.SPACE 2
 
 
 ;FLAGC
-;.EQU MCURX3_START_F	,FLAGC
-;.EQU MCURX3_START_F_P	,0
-;.EQU MCURX4_START_F	,FLAGC
-;.EQU MCURX4_START_F_P	,1
+.EQU EMU_U2TX_F 	,FLAGC
+.EQU EMU_U2TX_F_P	,0
+.EQU EMU_DATA_F	,FLAGC
+.EQU EMU_DATA_F_P	,1
 ;.EQU MCURX3_RXIN_F	,FLAGC
 ;.EQU MCURX3_RXIN_F_P	,2
 ;.EQU MCUTX4_START_F	,FLAGC
@@ -749,6 +770,23 @@ CLR_ALLREG_1:			;;
 	RETURN			;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+TEST_DLY:
+        MOVLF #50,R0
+TEST_DLY_1:
+        CLRWDT
+	MOV #30000,W0		;;
+	CALL DLYX		;;
+        DEC R0
+        BRA NZ,TEST_DLY_1
+        RETURN
+
+BLINK_GLED:
+        CLRWDT
+        BCF LEDG_O
+        CALL TEST_DLY
+        BSF LEDG_O
+        CALL TEST_DLY
+        BRA BLINK_GLED
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;		
 POWER_ON:			;;
@@ -759,7 +797,7 @@ POWER_ON:			;;
 	CALL CLR_ALLREG		;;
 	CALL INIT_IO		;;
 	;;;;;;;;;;;;;;;;;;;;;;;;;;
-	MOV #1000,W1		;;
+	MOV #100,W1		;;
 WAIT_POWER:			;;
 	MOV #1000,W0		;;
 	CALL DLYUX		;;
@@ -769,10 +807,8 @@ WAIT_POWER:			;;
 	;;;;;;;;;;;;;;;;;;;;;;;;;;
         CALL CLR_WREG 		;;
 	CALL INIT_IO		;;
-	CALL INIT_AD		;;
 	;;;;;;;;;;;;;;;;;;;;;;;;;;	
 	CALL INIT_RAM		;;
-	CALL INIT_SIO		;;
 	CALL INIT_OSC		;;
 	MOV #10000,W0		;;
 	CALL DLYX		;;
@@ -780,7 +816,6 @@ WAIT_POWER:			;;
 	;;;;;;;;;;;;;;;;;;;;;;;;;;
 	CALL INIT_TIMER2	;;
 	CALL INIT_UART1		;;
-	;CALL INIT_UART2	;;
 	;CALL INIT_INT		;;		
 	;;;;;;;;;;;;;;;;;;;;;;;;;;
 	;CALL INIT_TIMER1	;;
@@ -793,7 +828,7 @@ WAIT_POWER:			;;
 	;CALL TEST_MCUTX3	;;	
 	;CALL TEST_UART2	;;
 	;CALL TEST_TIMER	;;
-	;CALL TEST_UART1	;;
+	;CALL TEST_UART1	        ;;
 	;CALL TEST_UART2_I	;;
 	;CALL TEST_PWM		;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -801,43 +836,1321 @@ WAIT_POWER:			;;
         ;CALL TEST_LDLO         ;;
         ;CALL TEST_LSEO         ;;
         ;CALL TEST_LDFO         ;;
-        ;CALL GETSW              ;;
+        ;CALL GETSW             ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-        CALL TEST_FIB_TX
-
+        ;CALL TEST_FIB_TX       ;;
 	MOV #100,W0		;;
 	CALL DLYMX		;;
 	GOTO MAIN		;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-GETSW:
-        CLRWDT
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+INIT_UART2_115200:			;;
+	MOV #142,W0	;115200		;;66MHZ
+        BRA INIT_UART2_1                ;;
+INIT_UART2_38400:			;;
+	MOV #426,W0	;38400		;;66MHZ
+        BRA INIT_UART2_1                ;;
+INIT_UART2_9600:			;;
+	MOV #1704,W0	;9600		;;66MHZ
+        BRA INIT_UART2_1                ;;
+INIT_UART2_460800:			;;
+	MOV #35,W0	;460800		;;66MHZ
+        BRA INIT_UART2_1                ;;
+INIT_UART2_1:                           ;;        
+	MOV W0,U2BRG			;;
+	MOV #0x8008,W0			;;8BIT
+	MOV W0,U2MODE			;;
+	MOV #0x0400,W0			;;
+	MOV W0,U2STA 			;;
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	BCLR IPC7,#14 			;;
+	BCLR IPC7,#13 			;;
+	BSET IPC7,#12 			;;
+	BCLR IFS1,#U2TXIF		;;
+	BSET IEC1,#U2TXIE		;;UTXINT
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	MOV U2RXREG,W0			;;
+	MOV U2RXREG,W0			;;
+	MOV U2RXREG,W0			;;
+	MOV U2RXREG,W0			;;
+	BCLR IFS1,#U2RXIF		;;
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	BCLR IPC7,#10 			;;
+	BCLR IPC7,#9 			;;
+	BSET IPC7,#8 			;;
+	BCLR IFS1,#U2RXIF		;;
+	BSET IEC1,#U2RXIE		;;URXINT
+	RETURN				;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;	
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+TEST_F24:				;;
+	MOV #128,W0			;;	
+	MOV #F24TEST_FADR,W1		;;	
+	MOV #F24TMP_BUF,W2		;;	
+	CALL LOAD_F24			;;	
+	NOP				;;	
+	NOP				;;
+	NOP				;;
+	MOV #tbloffset(F24TEST_FADR),W1	;;	
+	CALL ERASE_F24			;;
+	NOP				;;
+	NOP				;;
+	NOP				;;
+	MOV #128,W0			;;	
+	MOV #F24TEST_FADR,W1		;;	
+	MOV #F24TMP_BUF,W2		;;	
+	CALL LOAD_F24			;;	
+	NOP				;;
+	NOP				;;	
+	NOP				;;
+	MOV #0,W7			;;
+	MOV #128,W6			;;
+	MOV #F24TMP_BUF,W1		;;
+TEST_F24_1:				;;
+	MOV W7,[W1++]			;;
+	INC W7,W7			;;
+	DEC W6,W6			;;
+	BRA NZ,TEST_F24_1		;;
+	NOP				;;
+	NOP				;;
+	NOP				;;
+	MOV #F24TEST_FADR,W0		;;
+	MOV W0,F24_ADR			;;
+	MOV #128,W0			;;	
+	MOV W0,F24_LEN			;;
+	CALL SAVE_F24			;;
+	NOP				;;
+	NOP				;;
+	NOP				;;
+	MOV #128,W0			;;	
+	MOV #F24TEST_FADR,W1		;;	
+	MOV #F24TMP_BUF,W2		;;	
+	CALL LOAD_F24			;;	
+	NOP				;;
+	NOP				;;
+	NOP				;;
+	RETURN				;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+
+
+
+;66MPS
+TEST_OSC:
+	TG TP1_O
+	TG TP1_O
+	TG TP1_O
+	TG TP1_O
+	TG TP1_O
+	TG TP1_O
+	TG TP1_O
+	TG TP1_O
+	CLRWDT
+	BRA TEST_OSC	
+
+
+TEST_PWM:
+	MOV #0x0406,W0
+	MOV W0,OC1CON1
+	MOV #0x000D,W0
+	MOV W0,OC1CON2
+	MOV #5000,W0
+	MOV W0,OC1R
+	MOV #10000,W0
+	MOV W0,PR3
+TEST_PWM_1:
+	MOV #10,W0			;;	
+	CALL DLYMX			;;
+	BRA TEST_PWM_1	
+
+	
+
+TEST_TIMER:
+	CLRWDT
+	BTSS TMR2,#8			;;/1MS
+	BCF TP1_O
+	BTSC TMR2,#8
+	BSF TP1_O
+	BRA TEST_TIMER
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+TEST_UART1:				;;
+	BSF RS485_DE_O
+	MOV #0xAB,W0			;;
+	MOV W0,U1TXREG			;;
+	MOV #10,W0			;;	
+	CALL DLYMX			;;
+	BRA TEST_UART1 			;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+		
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+LOAD_KEYTBL:				;;
+	MOV #128,W0			;;	
+	MOV #F24KEY_FADR,W1		;;	
+	MOV #KEYTBL_BUF,W2		;;	
+	CALL LOAD_F24			;;	
+	RETURN				;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+
+
+
+	 
+
+
+;SLOT TYPE BI7~4
+;01 CTR
+;02 SIP
+;03 FXO
+;04 FXS
+;05 T1S
+;06 MAG
+;07 ROIP
+;08 RECORD
+
+;SLOT SERIAL BI1~0
+
+
+
+
+
+GET_SLOTID:
+	SETM MY_SLOT_ID
+	CLR W3
+GET_SLOTID_0:
+	CLR W0
+	BTFSC SLOTSW_S3_I
+	BSET W0,#0
+	BTFSC SLOTSW_S2_I
+	BSET W0,#1
+	BTFSC SLOTSW_S1_I
+	BSET W0,#2
+	BTFSC SLOTSW_S0_I
+	BSET W0,#3
+	;BTFSC SLOTID4_I
+	;BSET W0,#4
+	.IFDEF DEBUG_SLOT_ID_K
+	MOV #DEBUG_SLOT_ID_K,W0
+	.ENDIF
+	CP MY_SLOT_ID
+	BRA Z,GET_SLOTID_1
+	MOV W0,MY_SLOT_ID
+        CLR MY_ITEM_ID
+        BTFSC SWS4_I
+        BSET MY_ITEM_ID,#0
+        BTFSC SWS5_I
+        BSET MY_ITEM_ID,#1
+        BTFSC SWS6_I
+        BSET MY_ITEM_ID,#2
+        BTFSC SWS7_I
+        BSET MY_ITEM_ID,#3
+	CLR W3
+	BRA GET_SLOTID_0
+GET_SLOTID_1:
+	MOV #1000,W0
+	CALL DLYUX
+	INC W3,W3
+	MOV #500,W0	
+	CP W3,W0
+	BRA GEU,$+4
+	BRA GET_SLOTID_0
+	RETURN
+	
+
+
+
+GET_IDPRG:
+	CLR W0
+	BTFSC SLOTSW_S3_I
+	BSET W0,#0
+	BTFSC SLOTSW_S2_I
+	BSET W0,#1
+	BTFSC SLOTSW_S1_I
+	BSET W0,#2
+	BTFSC SLOTSW_S0_I
+	BSET W0,#3
+	MOV W0,MY_SLOT_ID
         CLR W0
-        BTFSS SWS0_I
-        BSET W0,#0       
-        BTFSS SWS1_I
-        BSET W0,#1       
-        BTFSS SWS2_I
-        BSET W0,#2       
-        BTFSS SWS3_I
-        BSET W0,#3       
-        BTFSS SWS4_I
-        BSET W0,#4       
-        BTFSS SWS5_I
-        BSET W0,#5       
-        BTFSS SWS6_I
-        BSET W0,#6       
-        BTFSS SWS7_I
-        BSET W0,#7
-        NOP       
-        NOP
-        NOP
+        BTFSC SWS4_I
+        BSET W0,#0
+        BTFSC SWS5_I
+        BSET W0,#1
+        BTFSC SWS6_I
+        BSET W0,#2
+        BTFSC SWS7_I
+        BSET W0,#3
+        MOV W0,MY_ITEM_ID
         RETURN
-  
+
+
+
+/*
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+MAIN:					;;
+	BSF U1RX_EN_F			;;
+	BSF U2RX_EN_F			;;
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+MAIN_LOOP:				;;
+	CLRWDT				;;
+	CALL TMR2PRG			;;	
+	CALL MULTIME_PRG		;;
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	CALL CHK_U2TX_END		;;
+	CALL U2TXACT_PRG		;;
+	CALL CHK_U1RX			;;
+	CALL CHK_U2RX			;;
+	BRA MAIN_LOOP			;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+*/
+
+	
+	
+
+
+	
+
+
+	
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+CHK_MCURX1:				;;
+	RETURN	  			;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+DEC_SYSURX:
+	RETURN
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+IONOP:
+	NOP
+	NOP
+	NOP
+	NOP
+	RETURN
+	
+IOPRG:
+
+	RETURN
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+SET_CMDINX:
+	MOV W0,CMDINX
+	CLR CMDSTEP
+	CLR CMDTIME
+	RETURN
+
+
+
+
+
+
+CHK_LDU1TX:
+	RETURN
+CHK_LDU2TX:
+	RETURN
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+OTHPRG:					;;
+	BTSC U2STA,#OERR		;;
+	BCLR U2STA,#OERR		;;
+	BTSC U1STA,#OERR		;;
+	BCLR U1STA,#OERR		;;
+	RETURN				;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;	
+
+
+
+
+
+
+
+
+
+
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+INBUS:					;;
+	MOV TRISC,W2			;;
+	MOV #0xFFFF,W0			;;
+	MOV.B W0,W2			;;
+	MOV W2,TRISC			;;
+	RETURN				;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+OUTBUS:					;;
+	MOV TRISC,W2			;;
+	MOV #0x0000,W0			;;
+	MOV.B W0,W2			;;
+	MOV W2,TRISC			;;
+	RETURN				;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	
+KEYNOP:
+	NOP
+	NOP
+	NOP
+	NOP
+	NOP
+	NOP
+	NOP
+	NOP
+	NOP
+	NOP
+	NOP
+	NOP
+	NOP
+	NOP
+	NOP
+	NOP
+	RETURN
+
+
+
+
+
+
+;66MIPS
+; 0=4S
+; 1=8uS
+; 2=16uS
+; 3=31uS
+; 4=62.5uS
+; 5=125uS
+; 6=250uS
+; 7=500US
+; 8=1MS
+; 9=2 
+;10=4
+;11=8
+;12=16
+;13=32
+;14=64
+;15=128
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+TMR2PRG:				;;
+	CLR SHIFT_FLAG
+	CLR TMR2_FLAG			;;	
+	MOV TMR2,W0			;;
+	XOR TMR2_BUF,WREG		;;	
+	BTSC SR,#Z			;;
+	RETURN				;;
+	MOV W0,TMR2_FLAG		;;	
+	IOR TMR2_IORF			;;
+	XOR TMR2_BUF			;;
+	CLRWDT				;;
+	BTFSC T128M_F			;;
+	INC TMR2H_BUF			;;	
+	BTFSS T1M_F			;;
+	RETURN				;;
+	INC SHIFT_TIM			;;
+	MOV #16,w0			;;
+	CP SHIFT_TIM			;;		
+	BRA LTU,$+4			;;
+	CLR SHIFT_TIM			;;
+	MOV SHIFT_TIM,w0		;;
+	CALL BIT_TRANS			;;	
+	MOV W0,SHIFT_FLAG		;;	
+        ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	RETURN				;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+
+
+	.EQU CMD_NONE_K			,0
+	.EQU CMD_STOPALL_K		,1
+	.EQU CMD_FLASH_ERASE_K		,2
+	.EQU CMD_CHK_FLASH_BLANK_K	,3
+	.EQU CMD_ERASE_SCAN_KEY_K	,4
+	.EQU CMD_WRITE_SCAN_KEY_K	,5
+	.EQU CMD_ERASE_ALL_KEY_K	,6
+	.EQU CMD_SET_SCAN_KEY_K		,7
+	.EQU CMD_TEST0_K		,8
+	.EQU CMD_TEST1_K		,9
+	.EQU CMD_TEST2_K		,10
+	.EQU CMD_TEST3_K		,11
+	.EQU CMD_TEST4_K		,12
+	.EQU CMD_TEST5_K		,13
+	.EQU CMD_SET_ONE_KEY_K		,14
+	.EQU CMD_TEST6_K		,15
+	.EQU CMD_TEST7_K		,16
+	.EQU CMD_UTXTEST_K		,17
+	.EQU CMD_RESET_KB_K		,18
+
+
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+TIMEACT_PRG:				;;
+        BTFSC T16M_F                    ;;
+        CALL T16M_PRG                   ;;
+	BTFSC T128M_F			;;
+        CALL T128M_PRG                  ;;
+	RETURN				;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+T16M_PRG:
+        INC CONN485_TIM
+        MOV #20,W0
+        CP CONN485_TIM
+        BRA LTU,$+4
+        BCF CONN485_F
+        RETURN
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+T128M_PRG:                              ;;
+        CALL LED_PRG                    ;;
+        CALL GET_IDPRG                  ;;
+        RETURN                          ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+LED_PRG:                                ;;
+        MOV SLOT_TEST_STATUS,W0         ;;
+        AND #3,W0                       ;;
+        BRA W0                          ;;
+        BRA STP_0J                      ;;
+        BRA STP_1J                      ;;
+        BRA STP_2J                      ;;
+        BRA STP_3J                      ;;        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+STP_0J:                                 ;;
+        MOV SLOT_STATUS,W0              ;;
+        AND #3,W0                       ;;
+        BRA W0                          ;;      
+        BRA SLOT_STAJ0                  ;;        
+        BRA SLOT_STAJ1                  ;;
+        BRA SLOT_STAJ2                  ;;
+        BRA SLOT_STAJ3                  ;;
+SLOT_STAJ0:                             ;;
+        BSF LEDG_O                      ;;
+        BSF LEDR_O                      ;;
+        BSF LEDB_O                      ;;
+        RETURN                          ;;
+SLOT_STAJ1:                             ;;
+        BCF LEDG_O                      ;;
+        BCF LEDR_O                      ;;
+        BSF LEDB_O                      ;;
+        RETURN                          ;;
+SLOT_STAJ2:                             ;;
+        BTFSC CONN485_F                 ;;
+        TG LEDG_O                       ;;
+        BTFSS CONN485_F                 ;;
+        BCF LEDG_O                      ;;
+        BSF LEDR_O                      ;;
+        BSF LEDB_O                      ;;
+        RETURN                          ;;
+SLOT_STAJ3:                             ;;
+        BSF LEDG_O                      ;;
+        BCF LEDR_O                      ;;
+        BSF LEDB_O                      ;;
+        RETURN                          ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+STP_1J:                                 ;;
+        BSF LEDG_O                      ;;
+        BSF LEDR_O                      ;;
+        BCF LEDB_O                      ;;
+        RETURN                          ;;
+STP_2J:                                 ;;
+        BSF LEDG_O                      ;;
+        BSF LEDR_O                      ;;
+        TG LEDB_O                       ;;
+        INC SLOT_TEST_TIM               ;;
+        MOV #20,W0                      ;;
+        CP SLOT_TEST_TIM                ;;
+        BRA GEU,$+4                     ;;
+        RETURN                          ;;
+        CLR SLOT_TEST_STATUS            ;;       
+        RETURN                          ;;
+STP_3J:                                 ;;
+        BSF LEDG_O                      ;;
+        BCF LEDR_O                      ;;
+        BSF LEDB_O                      ;;
+        RETURN                          ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+
+	
+
+
+
+
+
+
+	
+
+
+
+
+
+
+
+
+
+
+	
+LOAD_W1_1B:
+	BTSC W1,#0
+	BRA LOAD_W1_1B_1
+	MOV [W1],W0
+	AND #255,W0
+	INC W1,W1
+	RETURN
+LOAD_W1_1B_1:
+	BCLR W1,#0
+	MOV [W1],W0
+	SWAP W0
+	AND #255,W0
+	INC2 W1,W1
+	RETURN
+ 		
+LOAD_W1_2B:
+	CALL LOAD_W1_1B
+	PUSH W0
+	CALL LOAD_W1_1B
+	SWAP W0
+	POP W2
+	IOR W0,W2,W0
+	RETURN
+
+
+
+
+
+
+	
+
+
+
+
+
+
+		
+
+
+
+	
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+INIT_IC1:				;;
+	MOV IC1BUF,W0			;;
+	MOV IC1BUF,W0			;;
+	MOV IC1BUF,W0			;;
+	MOV IC1BUF,W0			;;
+	BCLR IFS0,#IC1IF		;;
+	MOVLF #0x0402,IC1CON1		;;
+	BSET IPC0,#6			;;
+	BCLR IPC0,#5			;;
+	BCLR IPC0,#4			;;
+	BSET IEC0,#IC1IE		;;
+	RETURN				;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+INIT_IC2:				;;
+	MOV IC2BUF,W0			;;
+	MOV IC2BUF,W0			;;
+	MOV IC2BUF,W0			;;
+	MOV IC2BUF,W0			;;
+	BCLR IFS0,#IC2IF		;;
+	MOVLF #0x0402,IC2CON1		;;
+	BSET IPC0,#6			;;
+	BCLR IPC0,#5			;;
+	BCLR IPC0,#4			;;
+	BSET IEC0,#IC2IE		;;
+	RETURN				;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+INIT_IC3:				;;
+	MOV IC3BUF,W0			;;
+	MOV IC3BUF,W0			;;
+	MOV IC3BUF,W0			;;
+	MOV IC3BUF,W0			;;
+	BCLR IFS2,#IC3IF		;;
+	MOVLF #0x0402,IC3CON1		;;
+	BSET IPC9,#6			;;
+	BCLR IPC9,#5			;;
+	BCLR IPC9,#4			;;
+	BSET IEC2,#IC3IE		;;
+	RETURN				;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+
+
+
+;INPUT W0
+GET_UART_RATE:
+	BTSC W0,#4		
+	BRA UART_RATE_115200
+	BTSC W0,#3		
+	BRA UART_RATE_57600
+	BRA UART_RATE_9600
+UART_RATE_115200:
+	MOV #0xA000,W0			;;
+        MOV #189,W2                  	;;115200*3
+	RETURN
+UART_RATE_57600:
+	MOV #0xA000,W0			;;
+        MOV #378,W2                  	;;57600*3
+	RETURN
+UART_RATE_9600:
+	MOV #0xA000,W0			;;
+        MOV #2273,W2                  	;;9600*3
+	RETURN
+		
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+INIT_TIMER3:				;;
+	MOV #0xA030,W0			;;/256
+	MOV W0,T3CON			;;BASE TIME
+	RETURN				;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+INIT_TIMER2:				;;
+	MOV #0xA030,W0			;;/256
+	MOV W0,T2CON			;;BASE TIME
+	RETURN				;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+INIT_SIO:		        ;;
+	MOV #OSCCON,W1		;;
+	MOV #0x46,W2		;;
+	MOV #0x57,W3		;;
+	MOV.B W2,[W1] 		;;
+	MOV.B W3,[W1]		;;
+	BCLR OSCCON,#6		;;
+	;;;;;;;;;;;;;;;;;;;;;;;;;;
+	MOV #0xFF00,W0		;;
+	AND RPINR18		;;
+	MOV #42,W0		;;RP42 U1RX
+	IOR RPINR18		;;LSB:U1RX
+	;;;;;;;;;;;;;;;;;;;;;;;;;;
+	MOV #0x00FF,W0		;;
+	AND RPOR4		;;
+	MOV #0x0100,W0		;;RP43 U1TX
+	IOR RPOR4		;;
+	;;;;;;;;;;;;;;;;;;;;;;;;;;
+	MOV #OSCCON,W1		;;
+	MOV #0x46,W2		;;
+	MOV #0x57,W3		;;
+	MOV.B W2,[W1] 		;;
+	MOV.B W3,[W1]		;;
+	BSET OSCCON,#6		;;
+	RETURN			;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+INIT_SIO_SSPA_DRIVER:		;;
+	MOV #OSCCON,W1		;;
+	MOV #0x46,W2		;;
+	MOV #0x57,W3		;;
+	MOV.B W2,[W1] 		;;
+	MOV.B W3,[W1]		;;
+	BCLR OSCCON,#6		;;
+	;;;;;;;;;;;;;;;;;;;;;;;;;;
+	MOV #0xFF00,W0		;;
+	AND RPINR18		;;
+	MOV #42,W0		;;RP42 U1RX
+	IOR RPINR18		;;LSB:U1RX
+	;;;;;;;;;;;;;;;;;;;;;;;;;;
+	MOV #0x00FF,W0		;;
+	AND RPOR4		;;
+	MOV #0x0100,W0		;;RP43 U1TX
+	IOR RPOR4		;;
+	;;;;;;;;;;;;;;;;;;;;;;;;;;
+	MOV #0xFF00,W0		;;
+	AND RPINR19		;;
+	MOV #40,W0		;;RP40 U2RX
+	IOR RPINR19		;;LSB:U2RX
+	;;;;;;;;;;;;;;;;;;;;;;;;;;
+	MOV #0x00FF,W0		;;
+	AND RPOR3		;;
+	MOV #0x0300,W0		;;RP41 U2TX
+	IOR RPOR3		;;
+	;;;;;;;;;;;;;;;;;;;;;;;;;;
+	MOV #OSCCON,W1		;;
+	MOV #0x46,W2		;;
+	MOV #0x57,W3		;;
+	MOV.B W2,[W1] 		;;
+	MOV.B W3,[W1]		;;
+	BSET OSCCON,#6		;;
+	RETURN			;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+INIT_SIO_RF:			;;
+	MOV #OSCCON,W1		;;
+	MOV #0x46,W2		;;
+	MOV #0x57,W3		;;
+	MOV.B W2,[W1] 		;;
+	MOV.B W3,[W1]		;;
+	BCLR OSCCON,#6		;;
+	;;;;;;;;;;;;;;;;;;;;;;;;;;
+	MOV #0xFF00,W0		;;
+	AND RPINR18		;;
+	MOV #42,W0		;;RP42 U1RX
+	IOR RPINR18		;;LSB:U1RX
+	;;;;;;;;;;;;;;;;;;;;;;;;;;
+	MOV #0x00FF,W0		;;
+	AND RPOR4		;;
+	MOV #0x0100,W0		;;RP43 U1TX
+	IOR RPOR4		;;
+	;;;;;;;;;;;;;;;;;;;;;;;;;;
+	MOV #0xFF00,W0		;;
+	AND RPINR19		;;
+	MOV #55,W0		;;RP55 U2RX
+	IOR RPINR19		;;LSB:U2RX
+	;;;;;;;;;;;;;;;;;;;;;;;;;;
+	MOV #0xFF00,W0		;;
+	AND RPOR5		;;
+	MOV #0x0003,W0		;;RP54 U2TX
+	IOR RPOR5		;;
+	;;;;;;;;;;;;;;;;;;;;;;;;;;
+	MOV #OSCCON,W1		;;
+	MOV #0x46,W2		;;
+	MOV #0x57,W3		;;
+	MOV.B W2,[W1] 		;;
+	MOV.B W3,[W1]		;;
+	BSET OSCCON,#6		;;
+	RETURN			;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+
+INIT_SIO_IO:			;;
+	MOV #OSCCON,W1		;;
+	MOV #0x46,W2		;;
+	MOV #0x57,W3		;;
+	MOV.B W2,[W1] 		;;
+	MOV.B W3,[W1]		;;
+	BCLR OSCCON,#6		;;
+	;;;;;;;;;;;;;;;;;;;;;;;;;;
+	MOV #0xFF00,W0		;;
+	AND RPINR18		;;
+	MOV #42,W0		;;RP42 U1RX
+	IOR RPINR18		;;LSB:U1RX
+	;;;;;;;;;;;;;;;;;;;;;;;;;;
+	MOV #0x00FF,W0		;;
+	AND RPOR4		;;
+	MOV #0x0100,W0		;;RP43 U1TX
+	IOR RPOR4		;;
+	;;;;;;;;;;;;;;;;;;;;;;;;;;
+	MOV #0xFF00,W0		;;
+	AND RPINR19		;;
+	MOV #40,W0		;;RP40 U2RX
+	IOR RPINR19		;;LSB:U2RX
+	;;;;;;;;;;;;;;;;;;;;;;;;;;
+	MOV #0x00FF,W0		;;
+	AND RPOR3		;;
+	MOV #0x0300,W0		;;RP41 U2TX
+	IOR RPOR3		;;
+	;;;;;;;;;;;;;;;;;;;;;;;;;;
+	MOV #OSCCON,W1		;;
+	MOV #0x46,W2		;;
+	MOV #0x57,W3		;;
+	MOV.B W2,[W1] 		;;
+	MOV.B W3,[W1]		;;
+	BSET OSCCON,#6		;;
+	RETURN			;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+INIT_INT:			;;	
+	BSET INTCON2,#INT1EP 	;;0:POSITIVE EDAGE,1:NEGTIVE EDGE
+	BSET IPC5,#2 		;;
+	BCLR IPC5,#1 		;;
+	BCLR IPC5,#0 		;;
+	BCLR IFS1,#INT1IF	;;	
+	BSET IEC1,#INT1IE	;;	
+	RETURN			;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+;FCY=50mHZ
+;FCY=66mHZ
+;UXBRG=FCY/(4*BOUDRATE) -1
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+INIT_UART1:				;;
+	;MOV #142,W0	;115200		;;66MHZ
+	;MOV #65,W0	;256000		;;66MHZ
+	;MOV #47,W0	;345600		;;66MHZ
+	MOV #35,W0	;460800		;;66MHZ
+        ;;================================
+	MOV W0,U1BRG			;;
+	MOV #0x8008,W0			;;
+	MOV W0,U1MODE			;;
+	MOV #0x0400,W0			;;
+	MOV W0,U1STA 			;;
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	BCLR IPC3,#2 			;;
+	BSET IPC3,#1 			;;
+	BSET IPC3,#0 			;;
+	BCLR IFS0,#U1TXIF		;;
+	BSET IEC0,#U1TXIE		;;UTXINT
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	MOV U1RXREG,W0			;;
+	MOV U1RXREG,W0			;;
+	MOV U1RXREG,W0			;;
+	MOV U1RXREG,W0			;;
+	BCLR IFS0,#U1RXIF		;;
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	BCLR IPC2,#14 			;;
+	BSET IPC2,#13 			;;
+	BSET IPC2,#12 			;;
+	BCLR IFS0,#U1RXIF		;;
+	BSET IEC0,#U1RXIE		;;URXINT
+	RETURN				;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;	
+
+
+;;rs485
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+DIS_U2RX:				;;
+	MOV U2RXREG,W0			;;
+	MOV U2RXREG,W0			;;
+	MOV U2RXREG,W0			;;
+	MOV U2RXREG,W0			;;
+	BCLR IFS1,#U2RXIF		;;
+	BCLR IEC1,#U2RXIE		;;URXINT
+	RETURN				;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+EN_U2RX:				;;
+	MOV U2RXREG,W0			;;
+	MOV U2RXREG,W0			;;
+	MOV U2RXREG,W0			;;
+	MOV U2RXREG,W0			;;
+	BCLR IFS1,#U2RXIF		;;
+	BSET IEC1,#U2RXIE		;;URXINT
+	RETURN				;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+OSC_H:					;;
+OSC_FRCPLL:				;;
+	MOV #1,W0			;;FRCPLL
+	BRA OSC_PRG			;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;	
+OSC_M:					;;
+OSC_FRC:				;;
+	MOV #7,W0			;;FRC
+	BRA OSC_PRG			;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+OSC_L:					;;
+	MOV #7,W0			;;FRC
+	BRA OSC_PRG			;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+OSC_PRG:				;;
+	MOV #OSCCONH,W1			;;
+	MOV #0x78,W2			;;
+	MOV #0x9A,W3			;;
+	DISI #3				;;
+	MOV.B W2,[W1]			;;
+	MOV.B W3,[W1]			;;	
+	MOV.B WREG,OSCCONH		;;
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	MOV #OSCCON,W1			;;
+	MOV #0x46,W2			;;
+	MOV #0x57,W3			;;
+	DISI #3				;;
+	MOV.B W2,[W1]			;;
+	MOV.B W3,[W1]			;;
+	BSET OSCCON,#0			;;
+OSC_PRG_1:				;;
+	CLRWDT				;;
+	BTSC OSCCON,#0			;;
+	BRA OSC_PRG_1			;;
+	RETURN				;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+INIT_OSC:				;;
+	CLR CLKDIV			;;
+	MOV #48,W0			;;X*(48+2)/4=50MIPS
+;	MOV #64,W0			;;X*(64+2)/4=66MIPS
+	MOV #69,W0			;;X*(69+2)/3.685=66MIPS
+	MOV W0,PLLFBD			;;PLLDIV
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	MOV #0,W0			;;BIT40:PLL PREDIV=X+2	MUST BE 1-8MHZ
+	IOR CLKDIV			;;
+	MOV #0x0000,W0			;;BIT76:PLL POSTDIV=00=2,01=4,10=NO USE 11=8
+	IOR CLKDIV			;;
+	MOV #0x0000,W0			;;BIT10-8=FRCDIV OSC=7.37MHZ
+	IOR CLKDIV			;;
+	NOP
+	NOP
+	NOP
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	MOV #10000,W0			;;
+	CALL DLYX			;;
+	NOP
+	NOP
+	NOP
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	;MOV #7,W0			;;7=Fast RC Oscillator (FRC) with Divide-by-n
+	;MOV #6,W0			;;6=Fast RC Oscillator (FRC) with Divide-by-16
+	;MOV #5,W0			;;5=Low-Power RC Oscillator (LPRC)
+	;MOV #3,W0			;;3=XT,HS,EC WITH PLL
+	;MOV #2,W0			;;2=XT,HS,EC
+	MOV #1,W0			;;1=FRCPLL
+	;MOV #0,W0			;;0=FRC
+	CALL OSC_PRG			;;
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	MOV #0,W0			;;MAX 31
+	;NEG W0,W0
+	MOV W0,OSCTUN 			;;
+	;MOV #0x8800,W0			;;/256 512K REFCLKO
+	;MOV #0x8600,W0			;;/64  2.048 REFCLKO
+	;MOV W0,REFOCON 			;;
+	RETURN				;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+TEST_U1TX:				;;
+	CLRWDT				;;
+	MOV #0xAB,W0			;;
+	MOV W0,U1TXREG			;;
+	MOV #10000,W0			;;
+	CALL DLYX			;;
+	BRA TEST_U1TX			;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
 .IFDEF JS203_39A_K01_01
-      
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+__U2RXInterrupt:			;;
+	PUSH SR				;;
+	PUSH W0				;;
+	PUSH W1				;;
+	BCLR IFS1,#U2RXIF		;;
+	MOV U2RXREG,W1			;;
+	AND #255,W1			;;
+	;BTFSS U2RX_EN_F		;;
+	;BRA U2RXI_END			;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+        MOV #250,W0                     ;;
+        ADD TMR2,WREG                   ;;
+        MOV W0,U2TX_REPEAT_TIM          ;;
+        ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	MOV #0xEA,W0			;;
+	CP W0,W1			;;
+	BRA Z,U2RXI_PS			;;	
+	MOV #0xEB,W0			;;
+	CP W0,W1			;;
+	BRA Z,U2RXI_PE			;;	
+	MOV #0xEC,W0			;;
+	CP W0,W1			;;
+	BRA Z,U2RXI_PT			;;	
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	MOV #0xAB,W0			;; 
+	BTFSC U2RXT_F			;;
+	XOR W0,W1,W1			;;
+	BCF U2RXT_F			;;
+	MOV #U2RX_BUFSIZE,W0		;;
+	CP U2RX_BYTE_PTR		;;
+	BRA GEU,U2RXI_END		;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	MOV #U2RX_BUFA,W0		;;
+	BTFSC U2RX_BUFAB_F		;;
+	MOV #U2RX_BUFB,W0		;;
+	ADD U2RX_BYTE_PTR,WREG		;;
+	BCLR W0,#0			;;
+	BTSC U2RX_BYTE_PTR,#0		;;
+	BRA U2RXI_1			;;
+	MOV W1,[W0]			;;
+	BRA U2RXI_2			;;
+U2RXI_1:				;;
+	SWAP W1				;;
+	ADD W1,[W0],[W0]		;;
+	SWAP W1				;;
+U2RXI_2:				;;
+	MOV U2RX_TMP0,W0		;;
+	MOV W0,U2RX_TMP1		;;
+	MOV W1,W0			;;
+	MOV W0,U2RX_TMP0		;;
+	MOV W1,W0			;;
+	ADD U2RX_ADDSUM			;;	
+	XOR U2RX_XORSUM			;;
+	INC U2RX_BYTE_PTR		;;
+	BRA U2RXI_END			;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+U2RXI_PS:				;;
+	BCF U2RXT_F			;;
+	CLR U2RX_BYTE_PTR		;;
+	CLR U2RX_ADDSUM			;;
+	CLR U2RX_XORSUM			;;
+	BSF MASTER_U2RX_F		;;
+	BRA U2RXI_END			;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+U2RXI_PE:				;;
+	BCF U2RXT_F			;;
+	MOV #0xAB,W0			;;
+	XOR U2RX_XORSUM,WREG		;;	
+	XOR U2RX_TMP0,WREG		;;
+	BRA NZ,U2RXI_END		;;
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	MOV U2RX_TMP0,W0		;;
+	ADD U2RX_TMP0,WREG		;;
+	ADD U2RX_TMP1,WREG		;;
+	XOR U2RX_ADDSUM,WREG		;;
+	AND #255,W0			;;
+	BRA NZ,U2RXI_END		;;
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	MOV U2RX_BYTE_PTR,W0		;;	
+	BTFSS U2RX_BUFAB_F		;;	
+	MOV W0,U2RXA_LEN		;;
+	BTFSC U2RX_BUFAB_F		;;	
+	MOV W0,U2RXB_LEN		;;
+	BTFSS U2RX_BUFAB_F		;;	
+	BSF U2RX_PACKA_F		;;
+	BTFSC U2RX_BUFAB_F		;;	
+	BSF U2RX_PACKB_F		;;
+	TG U2RX_BUFAB_F			;;	
+	MOV TMR2,W0			;;
+	MOV W0,U2RX_PACK_TIME		;;	
+	BRA U2RXI_END			;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+U2RXI_PT:				;;
+	BSF U2RXT_F			;;
+	BRA U2RXI_END			;;
+U2RXI_END:				;;	
+	POP W1				;;
+	POP W0				;;
+	POP SR				;;
+	RETFIE				;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+INIT_IO:				;;
+	;;PIN1 				;;
+        BSF SWS0_IO                     ;;
+	;;PIN2 				;;
+        BSF SWS1_IO                     ;;
+	;;PIN3 				;;
+        BSF SWS2_IO                     ;;
+	;;PIN4 				;;
+        BSF SWS3_IO                     ;;
+	;;PIN5 				;;
+        BSF SWS4_IO                     ;;
+	;;PIN6 				;;
+        BSF SWS5_IO                     ;;
+	;;PIN8 				;;
+        BSF SWS6_IO                     ;;
+	;;PIN11 			;;
+        BSF SWS7_IO                     ;;
+	;;PIN12 			;;
+	BCF NC12_O                      ;;
+	BCF NC12_IO                     ;;
+	;;PIN13 			;;
+	BSF ADI_12V_IO			;;
+	;;PIN14 			;;
+	BSF ADI_5V_IO			;;
+	;;PIN15 			;;
+	BSF ADS0_IO			;;
+	;;PIN16 			;;
+	BSF ADS1_IO			;;
+	;;PIN21 			;;
+	BCF DB0_O			;;
+	BCF DB0_IO			;;
+	;;PIN22 			;;
+	BCF DB1_O			;;
+	BCF DB1_IO			;;
+	;;PIN23 			;;
+	BCF DB2_O			;;
+	BCF DB2_IO			;;
+	;;PIN24 			;;
+	BCF NC24_O			;;
+	BCF NC24_IO			;;
+	;;PIN27 			;;
+	BSF ADS2_IO			;;
+	;;PIN28 			;;
+	BSF ADS3_IO			;;
+	;;PIN29 			;;
+	BSF ADS4_IO			;;
+	;;PIN30 			;;
+	BSF ADS5_IO			;;
+	;;PIN31 			;;
+	BCF TP1_O                       ;;
+	BCF TP1_IO                       ;;
+	;;PIN32 			;;
+	BCF TP2_O                       ;;
+	BCF TP2_IO                       ;;
+	;;PIN33 			;;
+	BCF TP3_O                       ;;
+	BCF TP3_IO                       ;;
+	;;PIN34 			;;
+	BCF TP4_O                       ;;
+	BCF TP4_IO                       ;;
+	;;PIN35 			;;
+	BCF DB3_O			;;
+	BCF DB3_IO			;;
+	;;PIN36 			;;
+	BCF DB4_O			;;
+	BCF DB4_IO			;;
+	;;PIN37 			;;
+	BCF DB5_O			;;
+	BCF DB5_IO			;;
+	;;PIN39 			;;
+        BSF SLOTSW_S0_IO                ;;
+	;;PIN40 			;;
+        BSF SLOTSW_S1_IO                ;;
+	;;PIN42 			;;
+        BSF SLOTSW_S2_IO                ;;
+	;;PIN43 			;;
+        BSF SLOTSW_S3_IO                ;;
+	;;PIN44 			;;
+	BCF LDLO_TR_O			;;
+	BCF LDLO_TR_IO			;;
+	;;PIN45 			;;
+	BCF LSEO_TR_O			;;
+	BCF LSEO_TR_IO			;;
+	;;PIN46 			;;
+	BCF LDFO_TR_O			;;
+	BCF LDFO_TR_IO			;;
+	;;PIN47				;;
+	BCF RS485EX_DE_O		;;
+	BCF RS485EX_DE_IO		;;
+	;;PIN48 			;;
+	BSF RS485EX_RO_IO		;;
+	;;PIN49 			;;
+	BCF RS485EX_DI_O		;;
+	BCF RS485EX_DI_IO		;;
+	;;PIN50 			;;
+	BCF DB6_O			;;
+	BCF DB6_IO			;;
+	;;PIN51 			;;
+	BCF DB7_O			;;
+	BCF DB7_IO			;;
+	;;PIN52 			;;
+	BSF LSEI_CS_O			;;
+	BCF LSEI_CS_IO			;;
+	;;PIN53 			;;
+	BSF LDFI_CS_O			;;
+	BCF LDFI_CS_IO			;;
+	;;PIN54 			;;
+	BSF SEO_EN_N_O			;;
+	BCF SEO_EN_N_IO			;;
+	;;PIN55 			;;
+	BSF DFO_EN_N_O			;;
+	BCF DFO_EN_N_IO			;;
+	;;PIN58 			;;
+	BCF DFO_EN_P_O			;;
+	BCF DFO_EN_P_IO			;;
+	;;PIN59 			;;
+	BCF RS485_DE_O		        ;;
+	BCF RS485_DE_IO		        ;;
+	;;PIN60 			;;
+	BSF RS485_RO_IO		        ;;
+	;;PIN61 			;;
+	BCF RS485_DI_O		        ;;
+	BCF RS485_DI_IO		        ;;
+	;;PIN62 			;;
+	BSF LEDB_O                      ;;
+	BCF LEDB_IO                     ;;
+	;;PIN63 			;;
+	BSF LEDG_O                      ;;
+	BCF LEDG_IO                     ;;
+	;;PIN64 			;;
+	BSF LEDR_O                      ;;
+	BCF LEDR_IO                     ;;
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	BSET CNPUA,#CNPUA7              ;;        
+	BSET CNPUB,#CNPUB14             ;;        
+	BSET CNPUB,#CNPUB15             ;;        
+	BSET CNPUG,#CNPUG6              ;;        
+	BSET CNPUG,#CNPUG7              ;;        
+	BSET CNPUG,#CNPUG8              ;;        
+	BSET CNPUG,#CNPUG9              ;;        
+	BSET CNPUA,#CNPUA12             ;;        
+        CLR ANSELA                      ;;
+        CLR ANSELB                      ;;
+        CLR ANSELC                      ;;
+        CLR ANSELE                      ;;
+        MOVLF #3,MY_TYPE_ID             ;;
+	RETURN				;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+
 LDLO_OUT:
         BCF SEO_EN_N_O
         XOR LATC,WREG
@@ -985,376 +2298,13 @@ TEST_UART2_I:				;;
 	CALL DLYMX			;;
 	BRA TEST_UART2_I		;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-
-.ENDIF        
-
-
-
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-TEST_F24:				;;
-	MOV #128,W0			;;	
-	MOV #F24TEST_FADR,W1		;;	
-	MOV #F24TMP_BUF,W2		;;	
-	CALL LOAD_F24			;;	
-	NOP				;;	
-	NOP				;;
-	NOP				;;
-	MOV #tbloffset(F24TEST_FADR),W1	;;	
-	CALL ERASE_F24			;;
-	NOP				;;
-	NOP				;;
-	NOP				;;
-	MOV #128,W0			;;	
-	MOV #F24TEST_FADR,W1		;;	
-	MOV #F24TMP_BUF,W2		;;	
-	CALL LOAD_F24			;;	
-	NOP				;;
-	NOP				;;	
-	NOP				;;
-	MOV #0,W7			;;
-	MOV #128,W6			;;
-	MOV #F24TMP_BUF,W1		;;
-TEST_F24_1:				;;
-	MOV W7,[W1++]			;;
-	INC W7,W7			;;
-	DEC W6,W6			;;
-	BRA NZ,TEST_F24_1		;;
-	NOP				;;
-	NOP				;;
-	NOP				;;
-	MOV #F24TEST_FADR,W0		;;
-	MOV W0,F24_ADR			;;
-	MOV #128,W0			;;	
-	MOV W0,F24_LEN			;;
-	CALL SAVE_F24			;;
-	NOP				;;
-	NOP				;;
-	NOP				;;
-	MOV #128,W0			;;	
-	MOV #F24TEST_FADR,W1		;;	
-	MOV #F24TMP_BUF,W2		;;	
-	CALL LOAD_F24			;;	
-	NOP				;;
-	NOP				;;
-	NOP				;;
-	RETURN				;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-
-
-
-
-;66MPS
-TEST_OSC:
-	TG TP1_O
-	TG TP1_O
-	TG TP1_O
-	TG TP1_O
-	TG TP1_O
-	TG TP1_O
-	TG TP1_O
-	TG TP1_O
-	CLRWDT
-	BRA TEST_OSC	
-
-
-TEST_PWM:
-	MOV #0x0406,W0
-	MOV W0,OC1CON1
-	MOV #0x000D,W0
-	MOV W0,OC1CON2
-	MOV #5000,W0
-	MOV W0,OC1R
-	MOV #10000,W0
-	MOV W0,PR3
-TEST_PWM_1:
-	MOV #10,W0			;;	
-	CALL DLYMX			;;
-	BRA TEST_PWM_1	
-
-	
-
-TEST_TIMER:
-	CLRWDT
-	BTSS TMR2,#8			;;/1MS
-	BCF TP1_O
-	BTSC TMR2,#8
-	BSF TP1_O
-	BRA TEST_TIMER
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-TEST_UART1:				;;
-	BSF RS485_DE_O
-	MOV #'B',W0			;;
-	MOV W0,U1TXREG			;;
-	MOV #10,W0			;;	
-	CALL DLYMX			;;
-	BRA TEST_UART1 			;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-
-		
-	
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-INIT_AD:				;;
-	CLR ANSELA			;;
-	CLR ANSELB			;;
-	CLR ANSELC			;;
-	CLR ANSELE			;;
-	RETURN				;;
-;	BSET ANSELE,#12			;;
-;	BSET ANSELE,#13			;;
-	BSET ANSELE,#14			;;
-	MOV #0x0004,W0			;;AUTO SAMPLE	
-	MOV #0x0000,W0			;;	
-	MOV W0,AD1CON1			;;
-	MOV #0x0000,W0			;;	
-	MOV W0,AD1CON2			;;
-	MOV #0x000F,W0			;;	
-	MOV W0,AD1CON3			;;
-	MOV #0x0000,W0			;;	
-	MOV W0,AD1CON4			;;
-	MOV #15,W0			;;	
-	MOV W0,AD1CHS0			;;
-	MOV #0x0000,W0			;;	
-	MOV W0,AD1CHS123		;;
-	MOV #0x0000,W0			;;	
-	MOV W0,AD1CSSH			;;
-	MOV #0x0000,W0			;;	
-	MOV W0,AD1CSSL			;;
-	BSET AD1CON1,#ADON		;;
-	RETURN				;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;					
-
-CHK_U2TX_END:
-	BTFSS RS485EX_DE_O
-	RETURN
-	BTFSS U2TX_END_F
-	RETURN
-	BTSS U2STA,#8
-	RETURN
-	BCF U2TX_END_F
-	BCF RS485EX_DE_O
-	RETURN
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-LOAD_KEYTBL:				;;
-	MOV #128,W0			;;	
-	MOV #F24KEY_FADR,W1		;;	
-	MOV #KEYTBL_BUF,W2		;;	
-	CALL LOAD_F24			;;	
-	RETURN				;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-WAIT_U2TX:	
-	CLRWDT
-	BTFSC U2TX_EN_F
-	BRA WAIT_U2TX
-	RETURN
-
-
-
-;W1=LEN,PAYLOAD....
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-TRANS_MCUTX1:					;;
-	MOV [W1++],W0				;;
-	CP0 W0					;;	
-	BRA NZ,$+4				;;		
-	RETURN					;;
-	MOV #MCUTX1_BUFSIZE,W2			;;
-	CP W0,W2
-	BRA LEU,$+4				;;		
-	RETURN					;;
-	MOV W0,UTXTMP_LEN			;;
-	MOV W1,W3				;;
-	CLR MCUTX1_BYTE_LEN			;;
-TRANS_MCUTX1_1:					;;
-	MOVLF #10,MCUTX1_BIT_LEN		;;	
-	MOV W3,W1				;;
-	MOV MCUTX1_BYTE_LEN,W0			;;
-	ADD W0,W1,W1				;;
-	BCLR W1,#0				;;
-	MOV [W1],W0				;;
-	BTSC MCUTX1_BYTE_LEN,#0			;;
-	SWAP W0					;;
-	AND #255,W0				;;
-	MOV W0,W2				;;IN DATA
-	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-	MOV #0x7F00,W0				;;
-	IOR W0,W2,W2				;;
-	RLNC W2,W2				;;	
-	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-	MOV #MCUTX1_BUF,W1			;;
-	MOV MCUTX1_BYTE_LEN,W0			;;
-	ADD W0,W1,W1				;;
-	ADD W0,W1,W1				;;
-	MOV W2,[W1]				;;
-	INC MCUTX1_BYTE_LEN			;;
-	DEC UTXTMP_LEN				;;
-	BRA NZ,TRANS_MCUTX1_1			;;
-	CLR MCUTX1_BYTE_CNT			;;
-	CLR MCUTX1_BIT_CNT			;;
-	BSF MCUTX1_START_F			;;
-	RETURN					;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-
-
-
-;W1=LEN,PAYLOAD....
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-TRANS_MCUTX2:					;;
-	MOV [W1++],W0				;;
-	CP0 W0					;;	
-	BRA NZ,$+4				;;		
-	RETURN					;;
-	MOV #MCUTX2_BUFSIZE,W2			;;
-	CP W0,W2
-	BRA LEU,$+4				;;		
-	RETURN					;;
-	MOV W0,UTXTMP_LEN			;;
-	MOV W1,W3				;;
-	CLR MCUTX2_BYTE_LEN			;;
-TRANS_MCUTX2_1:					;;
-	MOVLF #10,MCUTX2_BIT_LEN		;;	
-	MOV W3,W1				;;
-	MOV MCUTX2_BYTE_LEN,W0			;;
-	ADD W0,W1,W1				;;
-	BCLR W1,#0				;;
-	MOV [W1],W0				;;
-	BTSC MCUTX2_BYTE_LEN,#0			;;
-	SWAP W0					;;
-	AND #255,W0				;;
-	MOV W0,W2				;;IN DATA
-	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-	MOV #0x7F00,W0				;;
-	IOR W0,W2,W2				;;
-	RLNC W2,W2				;;	
-	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-	MOV #MCUTX2_BUF,W1			;;
-	MOV MCUTX2_BYTE_LEN,W0			;;
-	ADD W0,W1,W1				;;
-	ADD W0,W1,W1				;;
-	MOV W2,[W1]				;;
-	INC MCUTX2_BYTE_LEN			;;
-	DEC UTXTMP_LEN				;;
-	BRA NZ,TRANS_MCUTX2_1			;;
-	CLR MCUTX2_BYTE_CNT			;;
-	CLR MCUTX2_BIT_CNT			;;
-	BSF MCUTX2_START_F			;;
-	RETURN					;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-
-
-;W1=LEN(2B),PAYLOAD....
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-TRANS_MCUTX3:					;;
-	MOV [W1++],W0				;;
-	CP0 W0					;;	
-	BRA NZ,$+4				;;		
-	RETURN					;;
-	MOV #MCUTX3_BUFSIZE,W2			;;
-	CP W0,W2
-	BRA LEU,$+4				;;		
-	RETURN					;;
-	MOV W0,UTXTMP_LEN			;;
-	MOV W1,W3				;;
-	CLR MCUTX3_BYTE_LEN			;;
-TRANS_MCUTX3_1:					;;
-	MOVLF #10,MCUTX3_BIT_LEN		;;	
-	MOV W3,W1				;;
-	MOV MCUTX3_BYTE_LEN,W0			;;
-	ADD W0,W1,W1				;;
-	BCLR W1,#0				;;
-	MOV [W1],W0				;;
-	BTSC MCUTX3_BYTE_LEN,#0			;;
-	SWAP W0					;;
-	AND #255,W0				;;
-	MOV W0,W2				;;IN DATA
-	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-	MOV #0x7F00,W0				;;
-	IOR W0,W2,W2				;;
-	RLNC W2,W2				;;	
-	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-	MOV #MCUTX3_BUF,W1			;;
-	MOV MCUTX3_BYTE_LEN,W0			;;
-	ADD W0,W1,W1				;;
-	ADD W0,W1,W1				;;
-	MOV W2,[W1]				;;
-	INC MCUTX3_BYTE_LEN			;;
-	DEC UTXTMP_LEN				;;
-	BRA NZ,TRANS_MCUTX3_1			;;
-	CLR MCUTX3_BYTE_CNT			;;
-	CLR MCUTX3_BIT_CNT			;;
-	BSF MCUTX3_EN_F				;;
-	RETURN					;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-	 
-
-
-;SLOT TYPE BI7~4
-;01 CTR
-;02 SIP
-;03 FXO
-;04 FXS
-;05 T1S
-;06 MAG
-;07 ROIP
-;08 RECORD
-
-;SLOT SERIAL BI1~0
-
-
-
-
-
-GET_SLOTID:
-	SETM SELF_SERIAL_ID
-	CLR W3
-GET_SLOTID_0:
-	CLR W0
-	BTFSC SLOTSW_S0_I
-	BSET W0,#0
-	BTFSC SLOTSW_S1_I
-	BSET W0,#1
-	BTFSC SLOTSW_S2_I
-	BSET W0,#2
-	BTFSC SLOTSW_S3_I
-	BSET W0,#3
-	;BTFSC SLOTID4_I
-	;BSET W0,#4
-	.IFDEF DEBUG_SERIAL_ID_K
-	MOV #DEBUG_SERIAL_ID_K,W0
-	.ENDIF
-	CP SELF_SERIAL_ID
-	BRA Z,GET_SLOTID_1
-	MOV W0,SELF_SERIAL_ID
-	CLR W3
-	BRA GET_SLOTID_0
-GET_SLOTID_1:
-	MOV #1000,W0
-	CALL DLYUX
-	INC W3,W3
-	MOV #500,W0	
-	CP W3,W0
-	BRA GEU,$+4
-	BRA GET_SLOTID_0
-	RETURN
-	
-
-
-
-
-
-
+;IO
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 MAIN:					;;
+        CALL INIT_SIO                   ;;
+        CALL INIT_UART2_9600            ;;
+	MOV #0x800A,W0			;;8BIT EVEN PARITY
+	MOV W0,U2MODE			;;
 	BSF U1RX_EN_F			;;
 	BSF U2RX_EN_F			;;
 	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1364,1000 +2314,126 @@ MAIN_LOOP:				;;
 	CALL MULTIME_PRG		;;
 	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	CALL CHK_U2TX_END		;;
-	CALL U2TXACT_PRG		;;
+	;CALL U2TXACT_PRG		;;
 	CALL CHK_U1RX			;;
 	CALL CHK_U2RX			;;
-	CALL CHK_MCURX3			;;
 	BRA MAIN_LOOP			;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-MULTIME_PRG:				;;
-	BTFSS T2M_F			;;
-	RETURN				;;
-	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-	INC MULT_TIM			;;
-	MOV #8,W0
-	CP MULT_TIM
-	BRA LTU,$+4
-	CLR MULT_TIM
-	MOV MULT_TIM,W0
-	BRA W0
-	BRA MULT_J0
-	BRA MULT_J1
-	BRA MULT_J2
-	BRA MULT_J3
-	BRA MULT_J4
-	BRA MULT_J5
-	BRA MULT_J6
-	BRA MULT_J7
-MULT_J0:
-	CALL CONVERT_AD
-	RETURN
-MULT_J1:
-	RETURN
-MULT_J2:
-	INC MULTJ2_CNT
-	MOV #4,W0
-	CP MULTJ2_CNT
-	BRA GEU,$+4
-	RETURN
-	CLR MULTJ2_CNT
-	CALL U1TXACT_PRG;//64MS
-	RETURN
-MULT_J3:
-	INC MULTJ3_CNT
-	MOV #2,W0
-	CP MULTJ3_CNT
-	BRA GEU,$+4
-	RETURN
-	CLR MULTJ3_CNT
-	CALL MCUTX3_PRG;;32MS
-	RETURN
-MULT_J4:
-	INC MULTJ4_CNT
-	MOV #8,W0
-	CP MULTJ4_CNT
-	BRA GEU,$+4
-	RETURN
-	CLR MULTJ4_CNT
-	CALL T128M_PRG
-	RETURN
-MULT_J5:
-	CALL SYSLED_PRG
-	RETURN
 
-MULT_J6:
-MULT_J7:
-	RETURN
-
-SYSLED_PRG:
-	INC UICON_TIM
-	MOV #100,W0
-	CP UICON_TIM
-	BRA LTU,SYSLED_1
-	BCF UICON_F
-	MOVLF #1,SLOTSTA_FLAG
-	CLR CHANNEL_FLAG		;;	
-	CLR IPADR0			;;
-	CLR IPADR1
-	CLR LEDPNL_FLAG0		;;
-	CLR LEDPNL_FLAG1		;;
-SYSLED_1:
-	INC CTRCON_TIM
-	MOV #100,W0
-	CP CTRCON_TIM
-	BRA LTU,$+4
-	BCF CTRCON_F
-
-	CLR W0
-	BTFSC CTRCON_F
-	BSET W0,#0
-	BTFSC UICON_F
-	BSET W0,#1
-	BRA W0
-	BRA LEDJ00
-	BRA LEDJ01
-	BRA LEDJ02
-	BRA LEDJ03
-
-LEDJ00:
-	CLR LEDPNL_FLAG2
-	BSET LEDPNL_FLAG2,#2
-	RETURN
-LEDJ01:
-	CLR LEDPNL_FLAG2
-	BSET LEDPNL_FLAG2,#1
-	RETURN
-LEDJ02:
-	CLR LEDPNL_FLAG2
-	BSET LEDPNL_FLAG2,#3
-	RETURN
-LEDJ03:
-	CLR LEDPNL_FLAG2
-	BSET LEDPNL_FLAG2,#0
-	RETURN
-
-	
-	
+.ENDIF
 
 
-	
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-T128M_PRG:				;;
-	RETURN				;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-
-	
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-CHK_MCURX1:				;;
-	RETURN	  			;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-DEC_SYSURX:
-	RETURN
-
-CHK_MCURX3:
-	RETURN
-
-
-;LEDPNL_FLAG0: 0:OFF, 1:ON, 2:BLINK QUICK, 3:BLINK SLOW 
-;LEDPNL_FLAG2(1:0)GLED: 0:OFF, 1:ON, 2:BLINK QUICK, 3:BLINK SLOW 
-;LEDPNL_FLAG2(3:2)RLED: 0:OFF, 1:ON, 2:BLINK QUICK, 3:BLINK SLOW 
-MCUTX3_PRG:
-	;MOVLF #0X0000,LEDPNL_FLAG0 
-	;MOVLF #0X0000,LEDPNL_FLAG1 
-	;MOVLF #0X0001,LEDPNL_FLAG2 
-	;MOVLF #0X0000,LEDPNL_FLAG3 
-
-	MOVLF #0x10,UTXCHN_FLAG
-	MOVLF #0xAB00,UTX_FLAG
-	MOVLF #0x1000,UTX_CMD
-	MOVFF LEDPNL_FLAG0,UTX_PARA0
-	MOVFF LEDPNL_FLAG1,UTX_PARA1
-	MOVFF LEDPNL_FLAG2,UTX_PARA2
-	MOVFF LEDPNL_FLAG3,UTX_PARA3
-	CALL UTX_STD
-	RETURN
-
+.IFDEF JS203_39A_K01_02
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-U1TXACT_PRG:				;;
-	MOVLF #0X01,UTXCHN_FLAG		;;
-	MOVLF #0xAB00,UTX_FLAG		;;DATA_PACK_ID AND FLAG	
-	MOVLF #0x1000,UTX_CMD		;;COMMAND CMD
-	MOVLF #0,TARGET_SERIAL_ID	;;
-	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-	MOV SW1_FLAG,W0			;;
-	SWAP W0				;;
-	IOR SELF_SERIAL_ID,WREG		;;
-	MOV W0,UTX_PARA0		;;
-	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-	MOV SCMDINX,W0			;;
-	MOV W0,UTX_PARA1		;;
-	CLR SCMDINX			;;
-	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-	CLR UTX_PARA2			;;
-	CLR UTX_PARA3			;;
-	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-	MOVLF #128,UTX_BUFFER_LEN	;;
-	MOV #ALLSLOT_INF_ADR,W3 	;;
-	CALL UTX_BUFFER_ID		;;
-	RETURN				;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-	
-		
-
-
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-U2TXACT_PRG:				;;
-	CP0 U2TXACT_INX			;;
-	BRA NZ,$+4			;;
-	RETURN 				;;
-	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-	MOV SELF_SERIAL_ID,W0		;;
-	INC W0,W0			;;
-	MUL U2TXACT_PARA1		;;UNIT 4US
-	MOV U2RX_PACK_TIME,W0		;;
-	ADD W0,W2,W2			;;	
-	MOV TMR2,W0			;;
-	SUB W0,W2,W0			;;
-	BTSC W0,#15			;;
-	RETURN 				;;
-	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-	MOV U2TXACT_INX,W0		;;
-	CLR U2TXACT_INX			;;
-	DEC W0,W0			;;	
-	CP W0,#1			;;
-	BRA LTU,$+4			;;
-	RETURN				;;
-	BRA W0 				;;
-	BRA U2TXACT_J0			;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;0x0000 RESPONSE OK			;;
-U2TXACT_J0:				;;
-	MOVLF #0X02,UTXCHN_FLAG		;;
-	MOVLF #0xAB01,UTX_FLAG		;;DATA_PACK_ID AND FLAG	
-	MOVFF U2TXACT_PARA0,UTX_CMD	;;COMMAND CMD
-	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-	MOV SW1_FLAG,W0			;;
-	SWAP W0				;;
-	IOR SLOTSTA_FLAG,WREG		;;
-	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-	MOV W0,UTX_PARA0		;;
-	MOV CHANNEL_FLAG,W0		;;
-	MOV W0,UTX_PARA1		;;
-	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-	MOVFF IPADR0,UTX_PARA2		;;
-	MOVFF IPADR1,UTX_PARA3		;;
-	CALL UTX_STD_RESP		;;	
-	RETURN 				;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-CHK_MCURX2:				;;
-	RETURN	  			;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-
-
-
-
-
-
-
-
-
-
-
-IONOP:
-	NOP
-	NOP
-	NOP
-	NOP
-	RETURN
-	
-IOPRG:
-
-	RETURN
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-SET_CMDINX:
-	MOV W0,CMDINX
-	CLR CMDSTEP
-	CLR CMDTIME
-	RETURN
-
-
-
-
-
-
-CHK_LDU1TX:
-	RETURN
-CHK_LDU2TX:
-	RETURN
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-OTHPRG:					;;
-	BTSC U2STA,#OERR		;;
-	BCLR U2STA,#OERR		;;
-	BTSC U1STA,#OERR		;;
-	BCLR U1STA,#OERR		;;
-	RETURN				;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;	
-
-
-
-
-
-
-
-
-
-
-
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-INBUS:					;;
-	MOV TRISC,W2			;;
-	MOV #0xFFFF,W0			;;
-	MOV.B W0,W2			;;
-	MOV W2,TRISC			;;
-	RETURN				;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-OUTBUS:					;;
-	MOV TRISC,W2			;;
-	MOV #0x0000,W0			;;
-	MOV.B W0,W2			;;
-	MOV W2,TRISC			;;
-	RETURN				;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-	
-KEYNOP:
-	NOP
-	NOP
-	NOP
-	NOP
-	NOP
-	NOP
-	NOP
-	NOP
-	NOP
-	NOP
-	NOP
-	NOP
-	NOP
-	NOP
-	NOP
-	NOP
-	RETURN
-
-
-
-
-
-
-;66MIPS
-; 0=4S
-; 1=8uS
-; 2=16uS
-; 3=31uS
-; 4=62.5uS
-; 5=125uS
-; 6=250uS
-; 7=500US
-; 8=1MS
-; 9=2 
-;10=4
-;11=8
-;12=16
-;13=32
-;14=64
-;15=128
-
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-TMR2PRG:				;;
-	clr shiftFlag
-	CLR TMR2_FLAG			;;	
-	MOV TMR2,W0			;;
-	XOR TMR2_BUF,WREG		;;	
-	BTSC SR,#Z			;;
-	RETURN				;;
-	MOV W0,TMR2_FLAG		;;	
-	IOR TMR2_IORF			;;
-	XOR TMR2_BUF			;;
-	CLRWDT				;;
-	BTFSC T128M_F			;;
-	INC TMR2H_BUF			;;	
-	BTFSS T1M_F			;;
-	RETURN				;;
-	inc shiftTime			;;
-	mov #16,w0			;;
-	cp shiftTime			;;		
-	bra ltu,$+4			;;
-	clr shiftTime			;;
-	mov shiftTime,w0		;;
-	call BIT_TRANS			;;	
-	mov w0,shiftFlag		;;	
-	return				;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-
-
-
-
-	.EQU CMD_NONE_K			,0
-	.EQU CMD_STOPALL_K		,1
-	.EQU CMD_FLASH_ERASE_K		,2
-	.EQU CMD_CHK_FLASH_BLANK_K	,3
-	.EQU CMD_ERASE_SCAN_KEY_K	,4
-	.EQU CMD_WRITE_SCAN_KEY_K	,5
-	.EQU CMD_ERASE_ALL_KEY_K	,6
-	.EQU CMD_SET_SCAN_KEY_K		,7
-	.EQU CMD_TEST0_K		,8
-	.EQU CMD_TEST1_K		,9
-	.EQU CMD_TEST2_K		,10
-	.EQU CMD_TEST3_K		,11
-	.EQU CMD_TEST4_K		,12
-	.EQU CMD_TEST5_K		,13
-	.EQU CMD_SET_ONE_KEY_K		,14
-	.EQU CMD_TEST6_K		,15
-	.EQU CMD_TEST7_K		,16
-	.EQU CMD_UTXTEST_K		,17
-	.EQU CMD_RESET_KB_K		,18
-
-
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-TIMEACT_PRG:				;;
-	BTFSS T1M_F			;;
-	RETURN				;;
-	RETURN
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;	
-CMD_UTXTEST_PRG:			;;
-	CP0 CMDTIME			;;
-	BRA Z,$+6			;;
-	DEC CMDTIME			;;
-	RETURN				;;
-	MOVLF #1000,CMDTIME		;;
-	MOV CMDSTEP,W0			;;
-	BRA W0				;;
-	BRA CUTP_0			;;
-	BRA CUTP_1			;;
-	BRA CUTP_2			;;
-CUTP_0:					;;
-	MOV #UTXTMP,W1			;;
-	MOV #0x2180,W0			;;	
-	MOV W0,[W1]			;;
-	MOV #2,W0			;;
-	MOV W0,UTXTMP_LEN		;;
-	CALL TRANS_MCUTX2		;;
-	INC CMDSTEP			;;
-	RETURN				;;
-CUTP_1:					;;
-	MOV #UTXTMP,W1			;;
-	MOV #0x3180,W0			;;	
-	MOV W0,[W1]			;;
-	MOV #2,W0			;;
-	MOV W0,UTXTMP_LEN		;;
-	CALL TRANS_MCUTX2		;;
-	INC CMDSTEP			;;
-	RETURN				;;
-CUTP_2:					;;
-	MOV #UTXTMP,W1			;;
-	MOV #0x1080,W0			;;	
-	MOV W0,[W1]			;;
-	MOV #2,W0			;;
-	MOV W0,UTXTMP_LEN		;;
-	CALL TRANS_MCUTX2		;;
-	CLR CMDINX			;;
-	CLR CMDSTEP			;;
-	RETURN				;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;	
-
-
-	
-
-
-
-
-
-
-	
-
-
-
-
-
-
-
-
-
-
-	
-LOAD_W1_1B:
-	BTSC W1,#0
-	BRA LOAD_W1_1B_1
-	MOV [W1],W0
-	AND #255,W0
-	INC W1,W1
-	RETURN
-LOAD_W1_1B_1:
-	BCLR W1,#0
-	MOV [W1],W0
-	SWAP W0
-	AND #255,W0
-	INC2 W1,W1
-	RETURN
- 		
-LOAD_W1_2B:
-	CALL LOAD_W1_1B
-	PUSH W0
-	CALL LOAD_W1_1B
-	SWAP W0
-	POP W2
-	IOR W0,W2,W0
-	RETURN
-
-
-
-
-
-
-	
-
-
-
-
-
-
-		
-
-
-
-	
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-INIT_IC1:				;;
-	MOV IC1BUF,W0			;;
-	MOV IC1BUF,W0			;;
-	MOV IC1BUF,W0			;;
-	MOV IC1BUF,W0			;;
-	BCLR IFS0,#IC1IF		;;
-	MOVLF #0x0402,IC1CON1		;;
-	BSET IPC0,#6			;;
-	BCLR IPC0,#5			;;
-	BCLR IPC0,#4			;;
-	BSET IEC0,#IC1IE		;;
-	RETURN				;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-INIT_IC2:				;;
-	MOV IC2BUF,W0			;;
-	MOV IC2BUF,W0			;;
-	MOV IC2BUF,W0			;;
-	MOV IC2BUF,W0			;;
-	BCLR IFS0,#IC2IF		;;
-	MOVLF #0x0402,IC2CON1		;;
-	BSET IPC0,#6			;;
-	BCLR IPC0,#5			;;
-	BCLR IPC0,#4			;;
-	BSET IEC0,#IC2IE		;;
-	RETURN				;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-INIT_IC3:				;;
-	MOV IC3BUF,W0			;;
-	MOV IC3BUF,W0			;;
-	MOV IC3BUF,W0			;;
-	MOV IC3BUF,W0			;;
-	BCLR IFS2,#IC3IF		;;
-	MOVLF #0x0402,IC3CON1		;;
-	BSET IPC9,#6			;;
-	BCLR IPC9,#5			;;
-	BCLR IPC9,#4			;;
-	BSET IEC2,#IC3IE		;;
-	RETURN				;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-
-
-
-
-;INPUT W0
-GET_UART_RATE:
-	BTSC W0,#4		
-	BRA UART_RATE_115200
-	BTSC W0,#3		
-	BRA UART_RATE_57600
-	BRA UART_RATE_9600
-UART_RATE_115200:
-	MOV #0xA000,W0			;;
-        MOV #189,W2                  	;;115200*3
-	RETURN
-UART_RATE_57600:
-	MOV #0xA000,W0			;;
-        MOV #378,W2                  	;;57600*3
-	RETURN
-UART_RATE_9600:
-	MOV #0xA000,W0			;;
-        MOV #2273,W2                  	;;9600*3
-	RETURN
-		
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-INIT_TIMER1:				;;
-        CLR TMR1                        ;;
-	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-	;MOV #0xA000,W0			;;
-	;MOV W0,T1CON			;;
-        ;MOV #567,W0                   	;;115200
-        ;MOV #189,W0                  	;;115200*3
-        ;MOV W0,PR1                      ;;
-	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-	;MOV #0xA000,W0			;;
-	;MOV W0,T1CON			;;
-        ;MOV #1136,W0                  	;;57600
-        ;MOV #378,W0                  	;;57600*3
-        ;MOV W0,PR1                     ;;
-	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-	;MOV #0xA000,W0			;;
-	;MOV W0,T1CON			;;
-        ;MOV #6834,W0                   ;;9600
-        ;MOV #2273,W0                   ;;9600*3
-        ;MOV W0,PR1                     ;;
-	MOV MCUU1_MODE,W0		;;
-	CALL GET_UART_RATE		;;
-	MOV W0,T1CON			;;
-	MOV W2,PR1			;;
-	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-	BSET IPC0,#14			;;
-	BCLR IPC0,#13			;;
-	BSET IPC0,#12			;;
-        BCLR IFS0,#T1IF			;;	
-        BSET IEC0,#3                    ;;            
-	RETURN				;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-INIT_TIMER3:				;;
-        CLR TMR3                        ;;
-	MOV MCUU2_MODE,W0		;;
-	CALL GET_UART_RATE		;;
-	MOV W0,T3CON			;;
-	MOV W2,PR3			;;
-	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-	BSET IPC2,#2			;;
-	BCLR IPC2,#1			;;
-	BSET IPC2,#0			;;
-        BCLR IFS0,#T3IF			;;	
-        BSET IEC0,#T3IE                  ;;            
-	RETURN				;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-INIT_TIMER4:				;;
-        CLR TMR4                        ;;
-	MOV MCUU3_MODE,W0		;;
-	CALL GET_UART_RATE		;;
-	MOV W0,T4CON			;;
-	MOV W2,PR4			;;
-	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-	BSET IPC6,#14			;;
-	BCLR IPC6,#13			;;
-	BSET IPC6,#12			;;
-        BCLR IFS1,#T4IF			;;	
-        BSET IEC1,#T4IE                  ;;            
-	RETURN				;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-
-
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-INIT_TIMER2:				;;
-	MOV #0xA030,W0			;;/256
-	MOV W0,T2CON			;;BASE TIME
-	RETURN				;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-
-
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-INIT_SIO:			;;
-	MOV #OSCCON,W1		;;
-	MOV #0x46,W2		;;
-	MOV #0x57,W3		;;
-	MOV.B W2,[W1] 		;;
-	MOV.B W3,[W1]		;;
-	BCLR OSCCON,#6		;;
-	;;;;;;;;;;;;;;;;;;;;;;;;;;
-	MOV #0xFF00,W0		;;
-	AND RPINR18		;;
-	MOV #42,W0		;;RP42 U1RX
-	IOR RPINR18		;;LSB:U1RX
-	;;;;;;;;;;;;;;;;;;;;;;;;;;
-	MOV #0x00FF,W0		;;
-	AND RPOR4		;;
-	MOV #0x0100,W0		;;RP43 U1TX
-	IOR RPOR4		;;
-	;;;;;;;;;;;;;;;;;;;;;;;;;;
-	MOV #0xFF00,W0		;;
-	AND RPINR19		;;
-	MOV #40,W0		;;RP40 U2RX
-	IOR RPINR19		;;LSB:U2RX
-	;;;;;;;;;;;;;;;;;;;;;;;;;;
-	MOV #0x00FF,W0		;;
-	AND RPOR3		;;
-	MOV #0x0300,W0		;;RP41 U2TX
-	IOR RPOR3		;;
-	;;;;;;;;;;;;;;;;;;;;;;;;;;
-	;MOV #0x00FF,W0		;;
-	;AND RPINR0		;;
-	;MOV #58,W0		;;RPI58
-	;SWAP W0		;;
-	;IOR RPINR0		;;INT1 IIC CLK IN
-	;;;;;;;;;;;;;;;;;;;;;;;;;;
-	;MOV #0x00FF,W0		;;
-	;AND RPOR6		;;RP57
-	;MOV #0x1000,W0		;;OC1
-	;IOR RPOR6		;;
-	;;;;;;;;;;;;;;;;;;;;;;;;;;
-	;MOV #0xFF00,W0		;;
-	;AND RPINR7		;;
-	;MOV #28,W0		;;
-	;IOR RPINR7		;;IC1
-	;;;;;;;;;;;;;;;;;;;;;;;;;;
-	;MOV #0x00FF,W0		;;
-	;AND RPINR7		;;
-	;MOV #27,W0		;;
-	;SWAP W0		;;
-	;IOR RPINR7		;;IC2
-	;;;;;;;;;;;;;;;;;;;;;;;;;;
-	;MOV #0xFF00,W0		;;
-	;AND RPINR8		;;
-	;MOV #37,W0		;;
-	;IOR RPINR8		;;IC3
-	;;;;;;;;;;;;;;;;;;;;;;;;;;
-	;MOV #0xFF00,W0		;;
-	;AND RPINR22		;;
-	;MOV #47,W0		;;
-	;IOR RPINR22		;;SPI2 DI 
-	;;;;;;;;;;;;;;;;;;;;;;;;;
-	;MOV #0x00FF,W0		;;
-	;AND RPOR8		;;
-	;MOV #0x08,W0		;;
-	;SWAP W0		;;
-	;IOR RPOR8		;;SPI2 DO 
-	;;;;;;;;;;;;;;;;;;;;;;;;;
-	;MOV #0xFF00,W0		;;
-	;AND RPOR9		;;
-	;MOV #0x09,W0		;;
-	;IOR RPOR9		;;SPI2 CLK 
-	;;;;;;;;;;;;;;;;;;;;;;;;;
-	;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	MOV #0xFF00,W0		;;
-;	AND RPOR5		;;
-;	MOV #0x0031,W0		;;REFCLKO
-;	IOR RPOR5		;;RP54
-	;;;;;;;;;;;;;;;;;;;;;;;;;;
-	MOV #OSCCON,W1		;;
-	MOV #0x46,W2		;;
-	MOV #0x57,W3		;;
-	MOV.B W2,[W1] 		;;
-	MOV.B W3,[W1]		;;
-	BSET OSCCON,#6		;;
-	RETURN			;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-INIT_INT:			;;	
-	BSET INTCON2,#INT1EP 	;;0:POSITIVE EDAGE,1:NEGTIVE EDGE
-	BSET IPC5,#2 		;;
-	BCLR IPC5,#1 		;;
-	BCLR IPC5,#0 		;;
-	BCLR IFS1,#INT1IF	;;	
-	BSET IEC1,#INT1IE	;;	
-	RETURN			;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-
-;FCY=50mHZ
-;FCY=66mHZ
-;UXBRG=FCY/(4*BOUDRATE) -1
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-INIT_UART1:				;;
-	MOV #107,W0	;115200		;;50MHZ
-	MOV #142,W0	;115200		;;66MHZ
-	;MOV #65,W0	;256000		;;66MHZ
-	;MOV #47,W0	;345600		;;66MHZ
-	;MOV #65,W0	;250000		;;66MHZ
-	;MOV #54,W0	;250000		;;66MHZ
-	;MOV #35,W0	;		;;66MHZ
-	MOV W0,U1BRG			;;
-	MOV #0x8008,W0			;;
-	MOV W0,U1MODE			;;
-	MOV #0x0400,W0			;;
-	MOV W0,U1STA 			;;
-	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-	BCLR IPC3,#2 			;;
-	BSET IPC3,#1 			;;
-	BSET IPC3,#0 			;;
-	BCLR IFS0,#U1TXIF		;;
-	;BSET IEC0,#U1TXIE		;;UTXINT
-	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-	MOV U1RXREG,W0			;;
-	MOV U1RXREG,W0			;;
-	MOV U1RXREG,W0			;;
-	MOV U1RXREG,W0			;;
-	BCLR IFS0,#U1RXIF		;;
-	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-	BCLR IPC2,#14 			;;
-	BSET IPC2,#13 			;;
-	BSET IPC2,#12 			;;
-	BCLR IFS0,#U1RXIF		;;
-	;BSET IEC0,#U1RXIE		;;URXINT
-	RETURN				;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;	
-
-
-;;rs485
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-INIT_UART2:				;;
-	MOV #107,W0	;115200		;;50MHZ
-	MOV #142,W0	;115200		;;66MHZ
-	;MOV #65,W0	;256000		;;66MHZ
-	;MOV #47,W0	;345600		;;66MHZ
-	MOV #35,W0	;460800		;;66MHZ
-
-	MOV W0,U2BRG			;;
-	MOV #0x8008,W0			;;8BIT
-	MOV W0,U2MODE			;;
-	MOV #0x0400,W0			;;
-	MOV W0,U2STA 			;;
-	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-	BCLR IPC7,#14 			;;
-	BCLR IPC7,#13 			;;
-	BSET IPC7,#12 			;;
-	BCLR IFS1,#U2TXIF		;;
-	;BSET IEC1,#U2TXIE		;;UTXINT
-	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-	MOV U2RXREG,W0			;;
-	MOV U2RXREG,W0			;;
-	MOV U2RXREG,W0			;;
-	MOV U2RXREG,W0			;;
+__U2RXInterrupt:			;;
+	PUSH SR				;;
+	PUSH W0				;;
+	PUSH W1				;;
 	BCLR IFS1,#U2RXIF		;;
+	MOV U2RXREG,W1			;;
+	AND #255,W1			;;
+	;BTFSS U2RX_EN_F		;;
+	;BRA U2RXI_END			;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+        MOV #250,W0                     ;;
+        ADD TMR2,WREG                   ;;
+        MOV W0,U2TX_REPEAT_TIM          ;;
+        ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	MOV #0xEA,W0			;;
+	CP W0,W1			;;
+	BRA Z,U2RXI_PS			;;	
+	MOV #0xEB,W0			;;
+	CP W0,W1			;;
+	BRA Z,U2RXI_PE			;;	
+	MOV #0xEC,W0			;;
+	CP W0,W1			;;
+	BRA Z,U2RXI_PT			;;	
 	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-	BCLR IPC7,#10 			;;
-	BCLR IPC7,#9 			;;
-	BSET IPC7,#8 			;;
-	BCLR IFS1,#U2RXIF		;;
-	;BSET IEC1,#U2RXIE		;;URXINT
-	RETURN				;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;	
-
+	MOV #0xAB,W0			;; 
+	BTFSC U2RXT_F			;;
+	XOR W0,W1,W1			;;
+	BCF U2RXT_F			;;
+	MOV #U2RX_BUFSIZE,W0		;;
+	CP U2RX_BYTE_PTR		;;
+	BRA GEU,U2RXI_END		;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-DIS_U2RX:				;;
-	MOV U2RXREG,W0			;;
-	MOV U2RXREG,W0			;;
-	MOV U2RXREG,W0			;;
-	MOV U2RXREG,W0			;;
-	BCLR IFS1,#U2RXIF		;;
-	BCLR IEC1,#U2RXIE		;;URXINT
-	RETURN				;;
+	MOV #U2RX_BUFA,W0		;;
+	BTFSC U2RX_BUFAB_F		;;
+	MOV #U2RX_BUFB,W0		;;
+	ADD U2RX_BYTE_PTR,WREG		;;
+	BCLR W0,#0			;;
+	BTSC U2RX_BYTE_PTR,#0		;;
+	BRA U2RXI_1			;;
+	MOV W1,[W0]			;;
+	BRA U2RXI_2			;;
+U2RXI_1:				;;
+	SWAP W1				;;
+	ADD W1,[W0],[W0]		;;
+	SWAP W1				;;
+U2RXI_2:				;;
+	MOV U2RX_TMP0,W0		;;
+	MOV W0,U2RX_TMP1		;;
+	MOV W1,W0			;;
+	MOV W0,U2RX_TMP0		;;
+	MOV W1,W0			;;
+	ADD U2RX_ADDSUM			;;	
+	XOR U2RX_XORSUM			;;
+	INC U2RX_BYTE_PTR		;;
+	BRA U2RXI_END			;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
+U2RXI_PS:				;;
+	BCF U2RXT_F			;;
+	CLR U2RX_BYTE_PTR		;;
+	CLR U2RX_ADDSUM			;;
+	CLR U2RX_XORSUM			;;
+	BSF MASTER_U2RX_F		;;
+	BRA U2RXI_END			;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-EN_U2RX:				;;
-	MOV U2RXREG,W0			;;
-	MOV U2RXREG,W0			;;
-	MOV U2RXREG,W0			;;
-	MOV U2RXREG,W0			;;
-	BCLR IFS1,#U2RXIF		;;
-	BSET IEC1,#U2RXIE		;;URXINT
-	RETURN				;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-OSC_H:					;;
-OSC_FRCPLL:				;;
-	MOV #1,W0			;;FRCPLL
-	BRA OSC_PRG			;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;	
-OSC_M:					;;
-OSC_FRC:				;;
-	MOV #7,W0			;;FRC
-	BRA OSC_PRG			;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-OSC_L:					;;
-	MOV #7,W0			;;FRC
-	BRA OSC_PRG			;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-OSC_PRG:				;;
-	MOV #OSCCONH,W1			;;
-	MOV #0x78,W2			;;
-	MOV #0x9A,W3			;;
-	DISI #3				;;
-	MOV.B W2,[W1]			;;
-	MOV.B W3,[W1]			;;	
-	MOV.B WREG,OSCCONH		;;
-	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-	MOV #OSCCON,W1			;;
-	MOV #0x46,W2			;;
-	MOV #0x57,W3			;;
-	DISI #3				;;
-	MOV.B W2,[W1]			;;
-	MOV.B W3,[W1]			;;
-	BSET OSCCON,#0			;;
-OSC_PRG_1:				;;
-	CLRWDT				;;
-	BTSC OSCCON,#0			;;
-	BRA OSC_PRG_1			;;
-	RETURN				;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-INIT_OSC:				;;
-	CLR CLKDIV			;;
-	MOV #48,W0			;;X*(48+2)/4=50MIPS
-;	MOV #64,W0			;;X*(64+2)/4=66MIPS
-	MOV #69,W0			;;X*(69+2)/3.685=66MIPS
-	MOV W0,PLLFBD			;;PLLDIV
-	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-	MOV #0,W0			;;BIT40:PLL PREDIV=X+2	MUST BE 1-8MHZ
-	IOR CLKDIV			;;
-	MOV #0x0000,W0			;;BIT76:PLL POSTDIV=00=2,01=4,10=NO USE 11=8
-	IOR CLKDIV			;;
-	MOV #0x0000,W0			;;BIT10-8=FRCDIV OSC=7.37MHZ
-	IOR CLKDIV			;;
-	NOP
-	NOP
-	NOP
-	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-	MOV #10000,W0			;;
-	CALL DLYX			;;
-	NOP
-	NOP
-	NOP
-	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-	;MOV #7,W0			;;7=Fast RC Oscillator (FRC) with Divide-by-n
-	;MOV #6,W0			;;6=Fast RC Oscillator (FRC) with Divide-by-16
-	;MOV #5,W0			;;5=Low-Power RC Oscillator (LPRC)
-	;MOV #3,W0			;;3=XT,HS,EC WITH PLL
-	;MOV #2,W0			;;2=XT,HS,EC
-	MOV #1,W0			;;1=FRCPLL
-	;MOV #0,W0			;;0=FRC
-	CALL OSC_PRG			;;
-	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-	MOV #0,W0			;;MAX 31
-	;NEG W0,W0
-	MOV W0,OSCTUN 			;;
-	;MOV #0x8800,W0			;;/256 512K REFCLKO
-	;MOV #0x8600,W0			;;/64  2.048 REFCLKO
-	;MOV W0,REFOCON 			;;
-	RETURN				;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-TEST_U1TX:				;;
-	CLRWDT				;;
+U2RXI_PE:				;;
+	BCF U2RXT_F			;;
 	MOV #0xAB,W0			;;
-	MOV W0,U1TXREG			;;
-	MOV #10000,W0			;;
-	CALL DLYX			;;
-	BRA TEST_U1TX			;;
+	XOR U2RX_XORSUM,WREG		;;	
+	XOR U2RX_TMP0,WREG		;;
+	BRA NZ,U2RXI_END		;;
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	MOV U2RX_TMP0,W0		;;
+	ADD U2RX_TMP0,WREG		;;
+	ADD U2RX_TMP1,WREG		;;
+	XOR U2RX_ADDSUM,WREG		;;
+	AND #255,W0			;;
+	BRA NZ,U2RXI_END		;;
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	MOV U2RX_BYTE_PTR,W0		;;	
+	BTFSS U2RX_BUFAB_F		;;	
+	MOV W0,U2RXA_LEN		;;
+	BTFSC U2RX_BUFAB_F		;;	
+	MOV W0,U2RXB_LEN		;;
+	BTFSS U2RX_BUFAB_F		;;	
+	BSF U2RX_PACKA_F		;;
+	BTFSC U2RX_BUFAB_F		;;	
+	BSF U2RX_PACKB_F		;;
+	TG U2RX_BUFAB_F			;;	
+	MOV TMR2,W0			;;
+	MOV W0,U2RX_PACK_TIME		;;	
+	BRA U2RXI_END			;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+U2RXI_PT:				;;
+	BSF U2RXT_F			;;
+	BRA U2RXI_END			;;
+U2RXI_END:				;;	
+	POP W1				;;
+	POP W0				;;
+	POP SR				;;
+	RETFIE				;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-INIT_RAM:				;;
-	RETURN				;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-.IFDEF JS203_39A_K01_01
+
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 INIT_IO:				;;
 	;;PIN1 				;;
@@ -2377,10 +2453,8 @@ INIT_IO:				;;
 	;;PIN11 			;;
         BSF SWS7_IO                     ;;
 	;;PIN12 			;;
-	BCF NC12_O                      ;;
-	BCF NC12_IO                     ;;
+	BSF LDFI_A0_IO                  ;;
 	;;PIN13 			;;
-	BSF ADI_12V_IO			;;
 	;;PIN14 			;;
 	BSF ADI_5V_IO			;;
 	;;PIN15 			;;
@@ -2404,9 +2478,9 @@ INIT_IO:				;;
 	;;PIN28 			;;
 	BSF ADS3_IO			;;
 	;;PIN29 			;;
-	BSF ADS4_IO			;;
+	BSF LDFI_A1_IO			;;
 	;;PIN30 			;;
-	BSF ADS5_IO			;;
+	BSF LDFI_A2_IO			;;
 	;;PIN31 			;;
 	BCF TP1_O                       ;;
 	BCF TP1_IO                       ;;
@@ -2437,14 +2511,13 @@ INIT_IO:				;;
 	;;PIN43 			;;
         BSF SLOTSW_S3_IO                ;;
 	;;PIN44 			;;
-	BCF LDLO_TR_O			;;
-	BCF LDLO_TR_IO			;;
+	BCF LDFO_A0_O			;;
+	BCF LDFO_A0_IO			;;
 	;;PIN45 			;;
-	BCF LSEO_TR_O			;;
-	BCF LSEO_TR_IO			;;
+	BSF LDFI_A3_IO			;;
 	;;PIN46 			;;
-	BCF LDFO_TR_O			;;
-	BCF LDFO_TR_IO			;;
+	BCF LDFO_A1_O			;;
+	BCF LDFO_A1_IO			;;
 	;;PIN47				;;
 	BCF RS485EX_DE_O		;;
 	BCF RS485EX_DE_IO		;;
@@ -2460,19 +2533,17 @@ INIT_IO:				;;
 	BCF DB7_O			;;
 	BCF DB7_IO			;;
 	;;PIN52 			;;
-	BSF LSEI_CS_O			;;
-	BCF LSEI_CS_IO			;;
+	BCF LDFO_A2_O			;;
+	BCF LDFO_A2_IO			;;
 	;;PIN53 			;;
-	BSF LDFI_CS_O			;;
-	BCF LDFI_CS_IO			;;
-	;;PIN54 			;;
-	BSF SEO_EN_N_O			;;
-	BCF SEO_EN_N_IO			;;
-	;;PIN55 			;;
-	BSF DFO_EN_N_O			;;
+	BCF DFO_EN_N_O			;;
 	BCF DFO_EN_N_IO			;;
+	;;PIN54 			;;
+	;;PIN55 			;;
+	BCF LDFO_A3_O			;;
+	BCF LDFO_A3_IO			;;
 	;;PIN58 			;;
-	BCF DFO_EN_P_O			;;
+	BSF DFO_EN_P_O			;;
 	BCF DFO_EN_P_IO			;;
 	;;PIN59 			;;
 	BCF RS485_DE_O		        ;;
@@ -2504,14 +2575,353 @@ INIT_IO:				;;
         CLR ANSELB                      ;;
         CLR ANSELC                      ;;
         CLR ANSELE                      ;;
+        MOVLF #3,MY_TYPE_ID             ;;
 	RETURN				;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+INIT_RAM:
+        RETURN
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+TEST_UART2:				;;
+	BSF RS485EX_DE_O                ;;
+	MOV #0xAB,W0			;;
+	MOV W0,U2TXREG			;;
+	MOV #10,W0			;;	
+	CALL DLYMX			;;
+	BRA TEST_UART2 			;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+INIT_AD:				;;
+	CLR ANSELA			;;
+	CLR ANSELB			;;
+	BSET ANSELA,#1			;;
+	BSET ANSELB,#0			;;
+	BSET ANSELB,#1			;;
+	BSET ANSELE,#12			;;
+	BSET ANSELE,#13			;;
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	MOV #0x0004,W0			;;AUTO SAMPLE	
+	;MOV #0x000C,W0			;;Enable simultaneous sampling and auto-sample
+	MOV #0x0000,W0			;;	
+	MOV W0,AD1CON1			;;
+	;MOV #0x0300,W0			;;4 CHANNEL	
+	MOV #0x0000,W0			;;	
+	MOV W0,AD1CON2			;;
+	MOV #0x800F,W0			;;	
+	MOV W0,AD1CON3			;;
+	MOV #0x0000,W0			;;	
+	MOV W0,AD1CON4			;;
+	MOV #0x0000,W0			;;	
+	MOV W0,AD1CSSH
+	MOV #0x0000,W0			;;	
+	MOV W0,AD1CSSL
+	BSET AD1CON1,#ADON		;;
+	RETURN				;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+TEST_UART2_I:				;;
+	MOV #0xAB00,W0			;;
+	MOV W0,UTX_FLAG			;;
+	MOV #0x0123,W0			;;
+	MOV W0,UTX_CMD			;;
+	MOV #0x4567,W0			;;
+	MOV W0,UTX_PARA0		;;
+	MOV #0x89AB,W0			;;
+	MOV W0,UTX_PARA1		;;
+	MOV #0xCDEF,W0			;;
+	MOV W0,UTX_PARA2		;;
+	MOV #0x2468,W0			;;
+	MOV W0,UTX_PARA3		;;
+	;CALL UTX_STD_ALL		;;
+	MOV #10,W0			;;	
+	CALL DLYMX			;;
+	BRA TEST_UART2_I		;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;IO
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+MAIN:					;;
+        CALL INIT_SIO_IO                ;;
+        CALL INIT_AD                    ;;
+        ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	MOV #1704,W0	;9600		;;66MHZ
+	MOV W0,U2BRG			;;
+	MOV #0x800A,W0			;;8BIT EVEN
+	MOV W0,U2MODE			;;
+	MOV #0x0400,W0			;;
+	MOV W0,U2STA 			;;
+        ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	BSF U1RX_EN_F			;;
+        MOVLF #2,SLOT_STATUS            ;;
+        CLR SLOT_TEST_STATUS            ;;
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+MAIN_LOOP:				;;
+        CLRWDT                          ;;
+	BTFSC T128M_F			;;
+	TG TP1_O			;;
+	CLRWDT				;;
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	CALL TMR2PRG			;;	
+	CALL TIMEACT_PRG		;;
+	CALL CHK_U1RX			;;
+        CALL CHK_U1TX_END               ;;
+        CALL CONVERT_AD
+        CALL CHK_LDFI
+        ;=================================
+        CALL EMU_U2TX_PRG                   ;;
+	BRA MAIN_LOOP			;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+CHK_LDFI:
+        CLR LDFIBUF
+        BTFSC LDFI_A0_I
+        BSET LDFIBUF,#0
+        BTFSC LDFI_A1_I
+        BSET LDFIBUF,#1
+        BTFSC LDFI_A2_I
+        BSET LDFIBUF,#2
+        BTFSC LDFI_A3_I
+        BSET LDFIBUF,#3
+        RETURN
+
+
+EMU1_DATA_TBL:
+        BRA W0
+        RETLW #0XAA,W0        
+        RETLW #0X55,W0        
+        RETLW #0X01,W0        
+        RETLW #0X02,W0        
+        RETLW #0X3F,W0        
+        RETLW #0X02,W0        
+        RETLW #0X18,W0        
+        RETLW #0X03,W0        
+        RETLW #0X0A,W0        
+        RETLW #0X55,W0        
+        RETLW #0XAA,W0        
+
+
+EMU2_DATA_TBL:
+        BRA W0
+        RETLW #0XAA,W0        
+        RETLW #0X55,W0        
+        RETLW #0X01,W0        
+        RETLW #0X01,W0        
+        RETLW #0X00,W0        
+        RETLW #0X02,W0        
+        RETLW #0X28,W0        
+        RETLW #0X03,W0        
+        RETLW #0X05,W0        
+        RETLW #0X55,W0        
+        RETLW #0XAA,W0        
+
+
+EMU_U2TX_PRG:
+	BSF RS485EX_DE_O                ;;
+        BTFSC EMU_U2TX_F
+        BRA EMU_U2TX_1
+        BTFSS T1M_F
+        RETURN
+        INC EMU_U2TX_TIM
+        MOV #100,W0
+        CP EMU_U2TX_TIM
+        BRA GEU,$+4
+        RETURN
+        CLR EMU_U2TX_TIM
+        BSF EMU_U2TX_F
+        CLR EMU_U2TX_BYTE
+        INC EMU_U2TX_CNT
+        MOV #30,W0
+        CP EMU_U2TX_CNT
+        BRA LTU,$+4
+        TG EMU_DATA_F
+        RETURN
+EMU_U2TX_1:
+	BTSS U2STA,#8
+	RETURN
+        MOV EMU_U2TX_BYTE,W0
+        BTFSS EMU_DATA_F
+        CALL EMU1_DATA_TBL 
+        BTFSC EMU_DATA_F
+        CALL EMU2_DATA_TBL 
+	MOV W0,U2TXREG			;;
+        INC EMU_U2TX_BYTE
+        MOV #11,W0
+        CP EMU_U2TX_BYTE
+        BRA GEU,$+4
+        RETURN
+        CLR EMU_U2TX_TIM
+        BCF EMU_U2TX_F
+        RETURN
+        
+
+ADCH_TBL:
+        AND #7,W0
+        BRA W0
+        RETLW #1,W0
+        RETLW #2,W0
+        RETLW #3,W0
+        RETLW #12,W0
+        RETLW #13,W0
+        RETLW #1,W0
+        RETLW #1,W0
+        RETLW #1,W0
+        RETLW #1,W0
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+CONVERT_AD:				;;
+	MOV CONVAD_CNT,W0 		;;
+	AND #3,W0
+	BRA W0				;;
+	BRA CONV_J0			;;
+	BRA CONV_J1			;;
+	BRA CONV_J2			;;
+	CLR CONVAD_CNT
+	RETURN
+CONV_J0:	
+	CLR ADTEST			;;
+	MOV ADCH_CNT,W0			;;
+        CALL ADCH_TBL
+	MOV W0,AD1CHS0			;;
+	BSET AD1CON1,#SAMP		;;
+	MOV #10,W0			;;
+	CALL DLYUX			;;
+	INC CONVAD_CNT			;;
+	RETURN				;;
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+CONV_J1:				;;
+	BCLR AD1CON1,#SAMP		;;
+	INC CONVAD_CNT                  ;;
+	RETURN				;;
+CONV_J2:				;;
+	BTSC AD1CON1,#DONE		;;
+	BRA CONV_J21
+	INC ADTEST
+	MOV #10000,W0
+	CP ADTEST
+	BRA GEU,$+4
+	RETURN	
+	NOP
+	CLR CONVAD_CNT
+	RETURN
+CONV_J21:				;;
+	CLR CONVAD_CNT			;;
+	MOV #ADBUF0,W1			;;
+	MOV ADBUF_CNT,W0		;;
+	SL W0,#1,W0			;;
+	ADD W0,W1,W1			;;
+	MOV ADC1BUF0,W0			;;
+	MOV W0,[W1]			;;
+	INC ADBUF_CNT			;;
+	MOV #4,W0			;;
+	CP ADBUF_CNT			;;
+	BRA GEU,$+4			;;
+	RETURN 				;;
+	CLR ADBUF_CNT			;;
+	MOVFF ADBUF0,R0			;;
+	MOVFF ADBUF1,R1			;;
+	MOVFF ADBUF2,R2			;;	
+	MOVFF ADBUF3,R3			;;
+	CALL FILTER			;;
+	MOV #ADI0BUF,W1			;;
+	MOV ADCH_CNT,W2			;;
+	ADD W2,W1,W1			;;
+	ADD W2,W1,W1			;;
+	MOV W0,[W1]			;;
+	INC ADCH_CNT			;;
+	MOV #5,W0			;;
+	CP ADCH_CNT			;;
+	BRA GEU,$+4			;;
+	RETURN				;;
+	CLR ADCH_CNT			;;
+	RETURN				;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+
+FILTER:
+	MOV R0,W0
+	CP R1
+	BRA LEU,FILTER_1
+	MOV R0,W0
+	XOR R1,WREG
+	XOR R0
+	XOR R1
+FILTER_1:
+	MOV R1,W0
+	CP R2
+	BRA LEU,FILTER_2
+	MOV R1,W0
+	XOR R2,WREG
+	XOR R1
+	XOR R2
+FILTER_2:
+	MOV R2,W0
+	CP R3
+	BRA LEU,FILTER_3
+	MOV R2,W0
+	XOR R3,WREG
+	XOR R2
+	XOR R3
+FILTER_3:
+	MOV R1,W0
+	CP R2
+	BRA LEU,FILTER_4
+	MOV R1,W0
+	XOR R2,WREG
+	XOR R1
+	XOR R2
+FILTER_4:
+	MOV R0,W0
+	CP R1
+	BRA LEU,FILTER_5
+	MOV R0,W0
+	XOR R1,WREG
+	XOR R0
+	XOR R1
+FILTER_5:
+	MOV R2,W0
+	ADD R1,WREG
+	LSR W0,#1,W0
+	RETURN
+
+
+
+
+
 .ENDIF
 
 
-.IFDEF JS203_39A_C01_03
+.IFDEF JS203_39A_C01_04
+NOP1PRG:
+        NOP
+        NOP
+        NOP
+        NOP
+        NOP
+        NOP
+        NOP
+        NOP
+        RETURN
+TEST_FIB_TX:
+        CALL NOP1PRG
+        BCF FIB_TX0_CHK_O
+        BCF FIB_TX1_CHK_O
+        NOP
+        CLRWDT
+        CALL NOP1PRG
+        BSF FIB_TX0_CHK_O
+        BSF FIB_TX1_CHK_O
+        BRA TEST_FIB_TX
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 INIT_IO:				;;
+        
 	;;PIN1 				;;
         BSF SWS0_IO                     ;;
 	;;PIN2 				;;
@@ -2607,10 +3017,10 @@ INIT_IO:				;;
 	;BCF RS485EX_DI_IO		;;
 	;;PIN50 			;;
 	BCF FIB_TX0_CHK_O		;;
-	BCF FIB_TX0_CHK_IO		;;
+	BSF FIB_TX0_CHK_IO		;;
 	;;PIN51 			;;
 	BCF FIB_TX1_CHK_O		;;
-	BCF FIB_TX1_CHK_IO		;;
+	BSF FIB_TX1_CHK_IO		;;
 	;;PIN52 			;;
 	;BSF LSEI_CS_O			;;
 	;BCF LSEI_CS_IO			;;
@@ -2626,6 +3036,940 @@ INIT_IO:				;;
 	;;PIN58 			;;
 	;BCF DFO_EN_P_O			;;
 	;BCF DFO_EN_P_IO		;;
+	;;PIN59 			;;
+	BCF RS485_DE_O		        ;;
+	BCF RS485_DE_IO		        ;;
+	;;PIN60 			;;
+	BSF RS485_RO_IO		        ;;
+	;;PIN61 			;;
+	BCF RS485_DI_O		        ;;
+	BCF RS485_DI_IO		        ;;
+        
+	;;PIN62 			;;
+	BSF LEDB_O                      ;;
+	BCF LEDB_IO                     ;;
+	;;PIN63 			;;
+	BSF LEDG_O                      ;;
+	BCF LEDG_IO                     ;;
+	;;PIN64 			;;
+	BSF LEDR_O                      ;;
+	BCF LEDR_IO                     ;;
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	BSET CNPUA,#CNPUA7              ;;        
+	BSET CNPUB,#CNPUB14             ;;        
+	BSET CNPUB,#CNPUB15             ;;        
+	BSET CNPUG,#CNPUG6              ;;        
+	BSET CNPUG,#CNPUG7              ;;        
+	BSET CNPUG,#CNPUG8              ;;        
+	BSET CNPUG,#CNPUG9              ;;        
+	BSET CNPUA,#CNPUA12             ;;        
+        CLR ANSELA                      ;;
+        CLR ANSELB                      ;;
+        CLR ANSELC                      ;;
+        CLR ANSELE                      ;;
+        MOVLF #5,MY_TYPE_ID             ;;
+	RETURN				;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+INIT_RAM:
+        RETURN
+
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+MAIN:	                                ;;
+        CALL INIT_RAM   		;;
+        CALL INIT_SIO                   ;;
+	BSF U1RX_EN_F			;;
+        MOVLF #2,SLOT_STATUS            ;;
+        CLR SLOT_TEST_STATUS            ;;
+        ;CALL TEST_FIB_TX
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+MAIN_LOOP:				;;
+        CLRWDT                          ;;
+	BTFSC T128M_F			;;
+	TG TP1_O			;;
+	CLRWDT				;;
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	CALL TMR2PRG			;;	
+	CALL TIMEACT_PRG		;;
+	CALL CHK_U1RX			;;
+	;CALL DELAY_ACT_PRG              ;;
+        CALL CHK_U1TX_END               ;;
+        ;=================================
+	BRA MAIN_LOOP			;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+.ENDIF
+
+
+
+
+
+
+
+.IFDEF JS203_39A_L01_02
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+INIT_IO:				;;
+        
+	;;PIN1 				;;
+	;;PIN2 				;;
+	;;PIN3 				;;
+	;;PIN4 				;;
+	;;PIN5 				;;
+        BSF SWS4_IO                     ;;
+	;;PIN6 				;;
+        BSF SWS5_IO                     ;;
+	;;PIN8 				;;
+        BSF SWS6_IO                     ;;
+	;;PIN11 			;;
+        BSF SWS7_IO                     ;;
+	;;PIN12 			;;
+	;;PIN13 			;;
+	;;PIN14 			;;
+	BSF ADI_5V_IO			;;
+	;;PIN15 			;;
+	;BSF ADS0_IO			;;
+	;;PIN16 			;;
+	;BSF ADS1_IO			;;
+	;;PIN21 			;;
+	BSF TEST_LACH_0_IO		;;
+	;;PIN22 			;;
+	BSF TEST_LACH_1_IO		;;
+	;;PIN23 			;;
+	BSF TEST_LACH_2_IO		;;
+	;;PIN24 			;;
+	;;PIN27 			;;
+	;BSF ADS2_IO			;;
+	;;PIN28 			;;
+	;BSF ADS3_IO			;;
+	;;PIN29 			;;
+	;;PIN30 			;;
+	;;PIN31 			;;
+	BCF TP1_O                       ;;
+	BCF TP1_IO                      ;;
+	;;PIN32 			;;
+	BCF TP2_O                       ;;
+	BCF TP2_IO                      ;;
+	;;PIN33 			;;
+	BCF TP3_O                       ;;
+	BCF TP3_IO                      ;;
+	;;PIN34 			;;
+	BCF TP4_O                       ;;
+	BCF TP4_IO                      ;;
+	;;PIN35 			;;
+	BSF TEST_LACH_3_IO		;;
+	;;PIN36 			;;
+	BSF TEST_LACH_4_IO		;;
+	;;PIN37 			;;
+	BSF TEST_LACH_5_IO		;;
+	;;PIN39 			;;
+        BSF SLOTSW_S0_IO                ;;
+	;;PIN40 			;;
+        BSF SLOTSW_S1_IO                ;;
+	;;PIN42 			;;
+        BSF SLOTSW_S2_IO                ;;
+	;;PIN43 			;;
+        BSF SLOTSW_S3_IO                ;;
+	;;PIN44 			;;
+	;BCF LDLO_TR_O			;;
+	;BCF LDLO_TR_IO			;;
+	;;PIN45 			;;
+	;BCF LSEO_TR_O			;;
+	;BCF LSEO_TR_IO			;;
+	;;PIN46 			;;
+	;BCF LDFO_TR_O			;;
+	;BCF LDFO_TR_IO			;;
+	;;PIN47				;;
+	;BCF RS485EX_DE_O		;;
+	;BCF RS485EX_DE_IO		;;
+	;;PIN48 			;;
+	;BSF RS485EX_RO_IO		;;
+	;;PIN49 			;;
+	;BCF RS485EX_DI_O		;;
+	;BCF RS485EX_DI_IO		;;
+	;;PIN50 			;;
+	BSF TEST_LACH_6_IO		;;
+	;;PIN51 			;;
+	BSF TEST_LACH_7_IO		;;
+	;;PIN52 			;;
+	;BSF LSEI_CS_O			;;
+	;BCF LSEI_CS_IO			;;
+	;;PIN53 			;;
+	;BSF LDFI_CS_O			;;
+	;BCF LDFI_CS_IO			;;
+	;;PIN54 			;;
+	;BSF SEO_EN_N_O			;;
+	;BCF SEO_EN_N_IO		;;
+	;;PIN55 			;;
+	;BSF DFO_EN_N_O			;;
+	;BCF DFO_EN_N_IO		;;
+	;;PIN58 			;;
+	;BCF DFO_EN_P_O			;;
+	;BCF DFO_EN_P_IO		;;
+	;;PIN59 			;;
+	BCF RS485_DE_O		        ;;
+	BCF RS485_DE_IO		        ;;
+	;;PIN60 			;;
+	BSF RS485_RO_IO		        ;;
+	;;PIN61 			;;
+	BCF RS485_DI_O		        ;;
+	BCF RS485_DI_IO		        ;;
+        
+	;;PIN62 			;;
+	BSF LEDB_O                      ;;
+	BCF LEDB_IO                     ;;
+	;;PIN63 			;;
+	BSF LEDG_O                      ;;
+	BCF LEDG_IO                     ;;
+	;;PIN64 			;;
+	BSF LEDR_O                      ;;
+	BCF LEDR_IO                     ;;
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	BSET CNPUA,#CNPUA7              ;;        
+	BSET CNPUB,#CNPUB14             ;;        
+	BSET CNPUB,#CNPUB15             ;;        
+	BSET CNPUG,#CNPUG6              ;;        
+	BSET CNPUG,#CNPUG7              ;;        
+	BSET CNPUG,#CNPUG8              ;;        
+	BSET CNPUG,#CNPUG9              ;;        
+	BSET CNPUA,#CNPUA12             ;;        
+        CLR ANSELA                      ;;
+        CLR ANSELB                      ;;
+        CLR ANSELC                      ;;
+        CLR ANSELE                      ;;
+        MOVLF #4,MY_TYPE_ID             ;;
+	RETURN				;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+INIT_RAM:
+        RETURN
+
+
+
+;$2
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+MAIN:	                                ;;
+        CALL INIT_RAM   		;;
+        CALL INIT_SIO                   ;;
+	BSF U1RX_EN_F			;;
+        MOVLF #2,SLOT_STATUS            ;;
+        CLR SLOT_TEST_STATUS            ;;
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+MAIN_LOOP:				;;
+        CLRWDT                          ;;
+	BTFSC T128M_F			;;
+	TG TP1_O			;;
+	CLRWDT				;;
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	CALL TMR2PRG			;;	
+	CALL TIMEACT_PRG		;;
+	CALL CHK_U1RX			;;
+	;CALL DELAY_ACT_PRG             ;;
+        CALL CHK_U1TX_END               ;;
+        ;=================================
+	BRA MAIN_LOOP			;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+.ENDIF
+
+
+
+
+
+.IFDEF JS203_39A_M01_01
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+TEST_UART2:				;;
+	BCLR IEC1,#U2TXIE		;;UTXINT
+	MOV #0xAB,W0			;;
+	MOV W0,U2TXREG			;;
+	MOV #10,W0			;;	
+	CALL DLYMX			;;
+	BRA TEST_UART2 			;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+__U2RXInterrupt:			;;
+	PUSH SR				;;
+	PUSH W0				;;
+	PUSH W1				;;
+	PUSH W2				;;
+	BCLR IFS1,#U2RXIF		;;
+	MOV U2RXREG,W2			;;
+	AND #255,W2			;;
+        ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+        INC U2RX_BYTE_PTR		;;      
+	MOV #512,W0		        ;;
+	CP U2RX_BYTE_PTR		;;
+        BRA LTU,$+4                     ;;
+        CLR U2RX_BYTE_PTR               ;;
+        ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+        MOV #'$',W0                     ;;
+        CP W0,W2                        ;;
+        BRA Z,U2RXI_00                  ;;
+        MOV #0x0D,W0                    ;;
+        CP W0,W2                        ;;
+        BRA Z,U2RXI_01                  ;;
+        BRA U2RXI_02
+U2RXI_00:                               ;;
+        MOV U2RX_BYTE_PTR,W0            ;;        
+        MOV W0,U2RX_BYTE_PTR0           ;;
+        BRA U2RXI_02                    ;;
+        ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+U2RXI_01:                               ;;
+	MOV #U2RX_PACK_BUF,W1		;;
+        MOV U2RX_PACK_PTR0,W0           ;;
+        SL W0,#2,W0                     ;;
+        ADD W0,W1,W1                    ;;
+        INC U2RX_PACK_PTR0              ;;
+        MOV #16,W0                      ;;
+        CP U2RX_PACK_PTR0               ;;
+        BRA LTU,$+4                     ;;
+        CLR U2RX_PACK_PTR0              ;;
+        ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+        MOV U2RX_BYTE_PTR0,W0           ;;
+        MOV W0,[W1++]                   ;;
+        MOV U2RX_BYTE_PTR,W0            ;;
+        MOV W0,[W1++]                   ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+U2RXI_02:                               ;;
+	MOV #U2RX_BUFA,W0		;;
+	ADD U2RX_BYTE_PTR,WREG		;;
+	BCLR W0,#0			;;
+	BTSC U2RX_BYTE_PTR,#0		;;
+	BRA U2RXI_1			;;
+	MOV W2,[W0]			;;
+	BRA U2RXI_END			;;
+U2RXI_1:				;;
+	SWAP W2				;;
+	ADD W2,[W0],[W0]		;;
+	SWAP W2				;;
+U2RXI_END:				;;	
+	POP W2				;;
+	POP W1				;;
+	POP W0				;;
+	POP SR				;;
+	RETFIE				;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+INIT_IO:				;;
+	;;PIN1 				;;
+	;;PIN2 				;;
+        BSF RFMA_CKO_IO                 ;;
+	;;PIN3 				;;
+        BSF RFMA_DIO1_IO                ;;
+	;;PIN4 				;;
+        BCF RFMA_DIO2_O                 ;;
+        BCF RFMA_DIO2_IO                ;;
+	;;PIN5 				;;
+        BSF SWS4_IO                     ;;
+	;;PIN6 				;;
+        BSF SWS5_IO                     ;;
+	;;PIN8 				;;
+        BSF SWS6_IO                     ;;
+	;;PIN11 			;;
+        BSF SWS7_IO                     ;;
+	;;PIN12 			;;
+	BCF RFMA_D0_O                   ;;
+	BCF RFMA_D0_IO                  ;;
+	;;PIN13 			;;
+	BSF ADI_24V_IO			;;
+	;;PIN14 			;;
+	;;PIN15 			;;
+	;BSF ADS0_IO			;;
+	;;PIN16 			;;
+	;BSF ADS1_IO			;;
+	;;PIN21 			;;
+	BSF RFMA_CS_O			;;
+	BCF RFMA_CS_IO			;;
+	;;PIN22 			;;
+	BSF RFMB_CS_O			;;
+	BCF RFMA_CS_IO			;;
+	;;PIN23 			;;
+	BCF RFM_SCK_O			;;
+	BCF RFM_SCK_IO			;;
+	;;PIN24 			;;
+	BCF RFM_SDIO_O			;;
+	BCF RFM_SDIO_IO			;;
+	;;PIN27 			;;
+	;BSF ADS2_IO			;;
+	;;PIN28 			;;
+	;BSF ADS3_IO			;;
+	;;PIN29 			;;
+	;;PIN30 			;;
+	;;PIN31 			;;
+	BCF TP1_O                       ;;
+	BCF TP1_IO                       ;;
+	;;PIN32 			;;
+	BCF TP2_O                       ;;
+	BCF TP2_IO                       ;;
+	;;PIN33 			;;
+	BCF TP3_O                       ;;
+	BCF TP3_IO                       ;;
+	;;PIN34 			;;
+	BCF TP4_O                       ;;
+	BCF TP4_IO                       ;;
+	;;PIN35 			;;
+	;;PIN36 			;;
+	;;PIN37 			;;
+	;;PIN39 			;;
+        BSF SLOTSW_S0_IO                ;;
+	;;PIN40 			;;
+        BSF SLOTSW_S1_IO                ;;
+	;;PIN42 			;;
+        BSF SLOTSW_S2_IO                ;;
+	;;PIN43 			;;
+        BSF SLOTSW_S3_IO                ;;
+	;;PIN44 			;;
+	BCF RFMB_DIO2_O			;;
+	BCF RFMB_DIO2_IO		        ;;
+	;;PIN45 			;;
+	BSF RFMB_DIO1_IO		        ;;
+	;;PIN46 			;;
+	BCF RFMB_CKO_O			;;
+	BCF RFMB_CKO_IO			;;
+	;;PIN47				;;
+	BCF RS485EX_DE_O		;;
+	BCF RS485EX_DE_IO		;;
+	;;PIN48 			;;
+	;BSF RS485EX_RO_IO		;;
+	;;PIN49 			;;
+	;BCF RS485EX_DI_O		;;
+	;BCF RS485EX_DI_IO		;;
+	;;PIN50 			;;
+	BSF GPS_RX_O    		;;
+	BCF GPS_RX_IO		        ;;
+	;;PIN51 			;;
+	BSF GPS_TX_IO		        ;;
+	;;PIN52 			;;
+	BSF GPS_RESET_O    		;;
+	BCF GPS_RESET_IO	        ;;
+	;;PIN53 			;;
+	;BSF LDFI_CS_O			;;
+	;BCF LDFI_CS_IO			;;
+	;;PIN54 			;;
+	;BSF SEO_EN_N_O			;;
+	;BCF SEO_EN_N_IO		;;
+	;;PIN55 			;;
+	BCF RFMB_D0_O			;;
+	BCF RFMB_D0_IO		        ;;
+	;;PIN58 			;;
+	;BCF DFO_EN_P_O			;;
+	;BCF DFO_EN_P_IO		;;
+	;;PIN59 			;;
+	BCF RS485_DE_O		        ;;
+	BCF RS485_DE_IO		        ;;
+	;;PIN60 			;;
+	BSF RS485_RO_IO		        ;;
+	;;PIN61 			;;
+	BCF RS485_DI_O		        ;;
+	BCF RS485_DI_IO		        ;;
+        
+	;;PIN62 			;;
+	BSF LEDB_O                      ;;
+	BCF LEDB_IO                     ;;
+	;;PIN63 			;;
+	BSF LEDG_O                      ;;
+	BCF LEDG_IO                     ;;
+	;;PIN64 			;;
+	BSF LEDR_O                      ;;
+	BCF LEDR_IO                     ;;
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	BSET CNPUA,#CNPUA7              ;;        
+	BSET CNPUB,#CNPUB14             ;;        
+	BSET CNPUB,#CNPUB15             ;;        
+	BSET CNPUG,#CNPUG6              ;;        
+	BSET CNPUG,#CNPUG7              ;;        
+	BSET CNPUG,#CNPUG8              ;;        
+	BSET CNPUG,#CNPUG9              ;;        
+	BSET CNPUA,#CNPUA12             ;;        
+        CLR ANSELA                      ;;
+        CLR ANSELB                      ;;
+        CLR ANSELC                      ;;
+        CLR ANSELE                      ;;
+        MOVLF #6,MY_TYPE_ID             ;;
+	RETURN				;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+INIT_RAM:
+        RETURN
+
+
+GET_W1_BYTE:
+        BTSC W1,#0
+        BRA GET_W1_BYTE_1
+        MOV [W1],W0
+        AND #255,W0
+        INC W1,W1
+        BRA GET_W1_BYTE_2
+GET_W1_BYTE_1:
+        BCLR W1,#0
+        MOV [W1],W0
+        SWAP W0
+        AND #255,W0
+        INC2 W1,W1
+GET_W1_BYTE_2:
+        PUSH W2
+        MOV LOOP_ADR_END,W2
+        CP W1,W2
+        POP W2
+        BRA GEU,$+4
+        RETURN
+        MOV LOOP_ADR_START,W1
+        RETURN
+
+
+SET_W3_BYTE:
+        BTSC W3,#0
+        BRA SET_W3_BYTE_1
+        MOV.B W0,[W3]
+        INC W3,W3
+        RETURN
+SET_W3_BYTE_1:
+        PUSH W2
+        BCLR W3,#0
+        MOV [W3],W2
+        SWAP W2
+        MOV.B W0,W2
+        SWAP W2
+        MOV W2,[W3]
+        POP W2
+        INC2 W3,W3
+        RETURN
+
+
+
+
+
+
+GNGGA_STR:
+ .ASCII "$GNGGA,\0"
+ .ASCII "$GNGLL,\0"
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+CMP_STR:				;;
+        TBLRDL [W3],W2		        ;;
+	BTSC W3,#0			;;
+	SWAP W2				;; 
+        INC W3,W3                       ;;
+	AND #255,W2			;;
+	BRA NZ,CMP_STR_1		;;
+        BSF YES_F                      ;;
+        RETURN                          ;;
+CMP_STR_1:                              ;;
+        CALL GET_W1_BYTE                ;;      
+        CP W0,W2                        ;;
+        BRA Z,CMP_STR                   ;;
+        BCF YES_F                       ;;
+        RETURN                          ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+LDB_W1_W3:                              ;;      
+        CALL GET_W1_BYTE                ;;
+        PUSH W0                         ;;
+        CALL SET_W3_BYTE                ;;
+        POP W0                          ;;
+        RETURN                          ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+CHK_GPSRX:                              ;;
+        MOV U2RX_PACK_PTR0,W0           ;;
+        CP U2RX_PACK_PTR1               ;;
+        BRA NZ,$+4                      ;;
+        RETURN                          ;;
+        MOV #U2RX_PACK_BUF,W1           ;;
+        MOV U2RX_PACK_PTR1,W0           ;;
+        SL W0,#2,W0                     ;;
+        ADD W0,W1,W1                    ;;
+        MOV [W1++],W0                   ;;
+        MOV W0,R0                       ;;
+        MOV [W1++],W0                   ;;
+        MOV W0,R1                       ;;
+        MOVLF #0X2500,LOOP_ADR_START    ;;
+        MOVLF #0X2700,LOOP_ADR_END      ;;
+        ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+        INC U2RX_PACK_PTR1              ;;
+        MOV #16,W0                      ;;
+        CP U2RX_PACK_PTR1               ;;
+        BRA LTU,$+4                     ;;
+        CLR U2RX_PACK_PTR1              ;;
+        ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+        LDPTR3 GNGGA_STR                ;;
+        MOV #U2RX_BUFA,W1               ;;
+        MOV R0,W0                       ;;
+        ADD W0,W1,W1                    ;;        
+        CALL CMP_STR                    ;;
+        BTFSS YES_F                     ;;
+        RETURN                          ;;
+        MOV #GPS_DATA_BUF,W3            ;;
+        MOV #U2RX_BUFA,W1               ;;
+        MOV R0,W0                       ;;
+        ADD W0,W1,W1                    ;;        
+        MOV #U2RX_BUFA,W5               ;;
+        MOV R1,W0                       ;;
+        ADD W0,W5,W5                    ;;    
+        CLR R3                          ;;
+CHK_GPSRX_1:                            ;;        
+        CALL GET_W1_BYTE                ;;
+        PUSH W0                         ;;
+        CALL SET_W3_BYTE                ;;
+        POP W0                          ;;
+        INC R3                          ;;
+        MOV #'M',W2                     ;;
+        CP W0,W2                        ;;
+        BRA Z,CHK_GPSRX_2               ;;
+        CP W1,W5                        ;;
+        BRA NZ,CHK_GPSRX_1              ;;
+        RETURN                          ;;
+CHK_GPSRX_2:                            ;; 
+        NOP                             ;;
+        NOP                             ;;
+        MOVFF R3,GPS_DATA_LEN           ;;
+        RETURN                          ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;   
+
+;RF
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+MAIN:	                                ;;
+        CALL INIT_RAM   		;;
+        CALL INIT_SIO_RF                ;;      
+        CALL INIT_UART2_38400           ;;
+	BSF U1RX_EN_F			;;
+	BSF U2RX_EN_F			;;
+        MOVLF #2,SLOT_STATUS            ;;
+        CLR SLOT_TEST_STATUS            ;;
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+MAIN_LOOP:				;;
+        CLRWDT                          ;;
+	BTFSC T128M_F			;;
+	TG TP1_O			;;
+	CLRWDT				;;
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	CALL TMR2PRG			;;	
+	CALL TIMEACT_PRG		;;
+	CALL CHK_U1RX			;;
+	;CALL DELAY_ACT_PRG             ;;
+        CALL CHK_U1TX_END               ;;
+        ;=================================
+        CALL CHK_GPSRX                  ;;
+        ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	BTSC U2STA,#OERR		;;
+	BCLR U2STA,#OERR		;;
+	BTSC U1STA,#OERR		;;
+	BCLR U1STA,#OERR		;;
+        BRA MAIN_LOOP
+
+
+	BRA MAIN_LOOP			;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+.ENDIF
+
+
+
+
+
+
+
+
+
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+DELAY_ACT_PRG:			        ;;
+        MOV TMR2,W0                     ;;
+        SUB DELAY_ACT_TIM,WREG          ;;
+        BTSS W0,#15                     ;;
+        RETURN                          ;;  
+	MOV DELAY_ACT,W0		;;
+        CLR DELAY_ACT                   ;;
+        CP W0,#2                        ;;
+        BRA LTU,$+4                     ;;
+        RETURN                          ;;
+	BRA W0				;;
+	BRA DELAY_ACT_J0                ;;//RETURN SLOT INF	BRA DELAY_ACT_J1                ;;
+	BRA DELAY_ACT_J1                ;;
+DELAY_ACT_J0:                           ;;                           
+	RETURN                          ;;
+DELAY_ACT_J1:                           ;;
+        MOV #DEVICE_ID_K,W0             ;;
+	MOV W0,TX_DEVICE_ID             ;;
+        MOV MY_SLOT_ID,W0               ;;      
+	MOV W0,TX_SERIAL_ID             ;;
+        MOV #0xAC00,W0                  ;;
+	MOV W0,TX_GROUP_ID              ;;
+	MOV #0x1000,W0                  ;;
+	MOV W0,UTX_CMD                  ;;
+        ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+        MOV MY_TYPE_ID,W2               ;;
+        MOV MY_ITEM_ID,W0               ;;
+        SL W0,#4,W0                     ;;
+        IOR W0,W2,W2                    ;;
+        MOV SLOT_STATUS,W0              ;;
+        SL W0,#8,W0                     ;;
+        IOR W0,W2,W2                    ;;
+        MOV SLOT_TEST_STATUS,W0         ;;
+        SL W0,#10,W0                    ;;
+        IOR W0,W2,W2                    ;;
+	MOV W2,W0                       ;;
+	MOV W0,UTX_PARA0                ;;
+        ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	MOV #0x0000,W0
+	MOV W0,UTX_PARA1
+	MOV #0x0000,W0
+	MOV W0,UTX_PARA2
+	MOV #0x0000,W0
+	MOV W0,UTX_PARA3
+        MOVLF #40,UTX_BUFFER_LEN
+        MOV #SLOTINF_BUF,W3
+	BCF U1U2_F
+	CALL UTX_STD
+	RETURN
+
+
+
+
+.IFDEF JS203_39A_F01_02
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+__U2RXInterrupt:			;;
+	PUSH SR				;;
+	PUSH W0				;;
+	PUSH W1				;;
+	BCLR IFS1,#U2RXIF		;;
+	MOV U2RXREG,W1			;;
+	AND #255,W1			;;
+	;BTFSS U2RX_EN_F		;;
+	;BRA U2RXI_END			;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+        MOV #250,W0                     ;;
+        ADD TMR2,WREG                   ;;
+        MOV W0,U2TX_REPEAT_TIM          ;;
+        ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	MOV #0xEA,W0			;;
+	CP W0,W1			;;
+	BRA Z,U2RXI_PS			;;	
+	MOV #0xEB,W0			;;
+	CP W0,W1			;;
+	BRA Z,U2RXI_PE			;;	
+	MOV #0xEC,W0			;;
+	CP W0,W1			;;
+	BRA Z,U2RXI_PT			;;	
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	MOV #0xAB,W0			;; 
+	BTFSC U2RXT_F			;;
+	XOR W0,W1,W1			;;
+	BCF U2RXT_F			;;
+	MOV #U2RX_BUFSIZE,W0		;;
+	CP U2RX_BYTE_PTR		;;
+	BRA GEU,U2RXI_END		;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	MOV #U2RX_BUFA,W0		;;
+	BTFSC U2RX_BUFAB_F		;;
+	MOV #U2RX_BUFB,W0		;;
+	ADD U2RX_BYTE_PTR,WREG		;;
+	BCLR W0,#0			;;
+	BTSC U2RX_BYTE_PTR,#0		;;
+	BRA U2RXI_1			;;
+	MOV W1,[W0]			;;
+	BRA U2RXI_2			;;
+U2RXI_1:				;;
+	SWAP W1				;;
+	ADD W1,[W0],[W0]		;;
+	SWAP W1				;;
+U2RXI_2:				;;
+	MOV U2RX_TMP0,W0		;;
+	MOV W0,U2RX_TMP1		;;
+	MOV W1,W0			;;
+	MOV W0,U2RX_TMP0		;;
+	MOV W1,W0			;;
+	ADD U2RX_ADDSUM			;;	
+	XOR U2RX_XORSUM			;;
+	INC U2RX_BYTE_PTR		;;
+	BRA U2RXI_END			;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+U2RXI_PS:				;;
+	BCF U2RXT_F			;;
+	CLR U2RX_BYTE_PTR		;;
+	CLR U2RX_ADDSUM			;;
+	CLR U2RX_XORSUM			;;
+	BSF MASTER_U2RX_F		;;
+	BRA U2RXI_END			;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+U2RXI_PE:				;;
+	BCF U2RXT_F			;;
+	MOV #0xAB,W0			;;
+	XOR U2RX_XORSUM,WREG		;;	
+	XOR U2RX_TMP0,WREG		;;
+	BRA NZ,U2RXI_END		;;
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	MOV U2RX_TMP0,W0		;;
+	ADD U2RX_TMP0,WREG		;;
+	ADD U2RX_TMP1,WREG		;;
+	XOR U2RX_ADDSUM,WREG		;;
+	AND #255,W0			;;
+	BRA NZ,U2RXI_END		;;
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	MOV U2RX_BYTE_PTR,W0		;;	
+	BTFSS U2RX_BUFAB_F		;;	
+	MOV W0,U2RXA_LEN		;;
+	BTFSC U2RX_BUFAB_F		;;	
+	MOV W0,U2RXB_LEN		;;
+	BTFSS U2RX_BUFAB_F		;;	
+	BSF U2RX_PACKA_F		;;
+	BTFSC U2RX_BUFAB_F		;;	
+	BSF U2RX_PACKB_F		;;
+	TG U2RX_BUFAB_F			;;	
+	MOV TMR2,W0			;;
+	MOV W0,U2RX_PACK_TIME		;;	
+	BRA U2RXI_END			;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+U2RXI_PT:				;;
+	BSF U2RXT_F			;;
+	BRA U2RXI_END			;;
+U2RXI_END:				;;	
+	POP W1				;;
+	POP W0				;;
+	POP SR				;;
+	RETFIE				;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+INIT_IO:				;;
+	;;PIN1 				;;
+        BSF SWS0_IO                     ;;
+	;;PIN2 				;;
+        BSF SWS1_IO                     ;;
+	;;PIN3 				;;
+        BSF SWS2_IO                     ;;
+	;;PIN4 				;;
+        BSF SWS3_IO                     ;;
+	;;PIN5 				;;
+        BSF SWS4_IO                     ;;
+	;;PIN6 				;;
+        BSF SWS5_IO                     ;;
+	;;PIN8 				;;
+        BSF SWS6_IO                     ;;
+	;;PIN11 			;;
+        BSF SWS7_IO                     ;;
+	;;PIN12 			;;
+	BCF NC12_O                      ;;
+	BCF NC12_IO                     ;;
+	;;PIN13 			;;
+	BCF NC13_O                      ;;
+	BCF NC13_IO                     ;;
+	;;PIN14 			;;
+	BSF ADI_5V_IO			;;
+	;;PIN15 			;;
+	BCF NC15_O                      ;;
+	BCF NC15_IO                     ;;
+	;;PIN16 			;;
+	BCF NC16_O                      ;;
+	BCF NC16_IO                     ;;
+	;;PIN21 			;;
+	BCF NC21_O                      ;;
+	BCF NC21_IO                     ;;
+	;;PIN22 			;;
+	BCF NC22_O                      ;;
+	BCF NC22_IO                     ;;
+	;;PIN23 			;;
+	BCF NC23_O                      ;;
+	BCF NC23_IO                     ;;
+	;;PIN24 			;;
+	BCF NC24_O			;;
+	BCF NC24_IO			;;
+	;;PIN27 			;;
+	BCF NC27_O			;;
+	BCF NC27_IO			;;
+	;;PIN28 			;;
+	BCF NC28_O			;;
+	BCF NC28_IO			;;
+	;;PIN29 			;;
+	BCF NC29_O			;;
+	BCF NC29_IO			;;
+	;;PIN30 			;;
+	BCF NC30_O			;;
+	BCF NC30_IO			;;
+	;;PIN31 			;;
+	BCF TP1_O                       ;;
+	BCF TP1_IO                       ;;
+	;;PIN32 			;;
+	BCF TP2_O                       ;;
+	BCF TP2_IO                       ;;
+	;;PIN33 			;;
+	BCF TP3_O                       ;;
+	BCF TP3_IO                       ;;
+	;;PIN34 			;;
+	BCF TP4_O                       ;;
+	BCF TP4_IO                       ;;
+	;;PIN35 			;;
+	BCF NC35_O			;;
+	BCF NC35_IO			;;
+	;;PIN36 			;;
+	BCF NC36_O			;;
+	BCF NC36_IO			;;
+	;;PIN37 			;;
+	BCF NC37_O			;;
+	BCF NC37_IO			;;
+	;;PIN39 			;;
+        BSF SLOTSW_S0_IO                ;;
+	;;PIN40 			;;
+        BSF SLOTSW_S1_IO                ;;
+	;;PIN42 			;;
+        BSF SLOTSW_S2_IO                ;;
+	;;PIN43 			;;
+        BSF SLOTSW_S3_IO                ;;
+	;;PIN44 			;;
+	BCF NC44_O			;;
+	BCF NC44_IO			;;
+	;;PIN45 			;;
+	BCF NC45_O			;;
+	BCF NC45_IO			;;
+	;;PIN46 			;;
+	BCF NC46_O			;;
+	BCF NC46_IO			;;
+	;;PIN47				;;
+	BCF RS485EX_DE_O		;;
+	BCF RS485EX_DE_IO		;;
+	;;PIN48 			;;
+	BSF RS485EX_RO_IO		;;
+	;;PIN49 			;;
+	BCF RS485EX_DI_O		;;
+	BCF RS485EX_DI_IO		;;
+	;;PIN50 			;;
+	BSF WG_TRIG_EN_O	        ;;
+	BCF WG_TRIG_EN_IO		;;
+	;;PIN51 			;;
+	BCF NC51_O			;;
+	BCF NC51_IO			;;
+	;;PIN52 			;;
+	BCF NC52_O			;;
+	BCF NC52_IO			;;
+	;;PIN53 			;;
+	BCF NC53_O			;;
+	BCF NC53_IO			;;
+	;;PIN54 			;;
+	BCF NC54_O			;;
+	BCF NC54_IO			;;
+	;;PIN55 			;;
+	BCF NC55_O			;;
+	BCF NC55_IO			;;
+	;;PIN58 			;;
+	BCF NC58_O			;;
+	BCF NC58_IO			;;
 	;;PIN59 			;;
 	BCF RS485_DE_O		        ;;
 	BCF RS485_DE_IO		        ;;
@@ -2652,26 +3996,119 @@ INIT_IO:				;;
 	BSET CNPUG,#CNPUG8              ;;        
 	BSET CNPUG,#CNPUG9              ;;        
 	BSET CNPUA,#CNPUA12             ;;        
+        ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	BSET CNPUC,#CNPUC12             ;;        
+	BSET CNPUC,#CNPUC15             ;;        
+	BSET CNPUD,#CNPUD8              ;;        
+	BSET CNPUB,#CNPUB5              ;;        
+	BSET CNPUB,#CNPUB10             ;;        
         CLR ANSELA                      ;;
         CLR ANSELB                      ;;
         CLR ANSELC                      ;;
         CLR ANSELE                      ;;
+        ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+        MOVLF #8,MY_TYPE_ID             ;;
 	RETURN				;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-TEST_FIB_TX:
-        BCF FIB_TX0_CHK_O
-        BCF FIB_TX1_CHK_O
-        NOP
-        CLRWDT
-        BSF FIB_TX0_CHK_O
-        BSF FIB_TX1_CHK_O
-        BRA TEST_FIB_TX
+INIT_RAM:
+        MOVLF #1,SON_SERIAL_ID
+        MOV #SLOTINF_BUF,W1
+        REPEAT #39;
+        CLR [W1++]
+        RETURN
+
+;$1 DRV
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+MAIN:	                                ;;
+        CALL INIT_RAM   		;;
+        CALL INIT_SIO_SSPA_DRIVER       ;;        
+        CALL INIT_UART2_460800          ;;
+	BSF U1RX_EN_F			;;
+	BSF U2RX_EN_F			;;
+        MOVLF #2,SLOT_STATUS            ;;
+        CLR SLOT_TEST_STATUS            ;;
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+MAIN_LOOP:				;;
+        CLRWDT                          ;;
+	BTFSC T128M_F			;;
+	TG TP1_O			;;
+	CLRWDT				;;
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	CALL TMR2PRG			;;	
+	CALL TIMEACT_PRG		;;
+	CALL CHK_U1RX			;;
+        CALL CHK_U1TX_END               ;;
+        ;=================================
+        CALL U2TX_PRG                   ;;
+        CALL CHK_U2TX_END               ;;
+	CALL CHK_U2RX			;;
+	BRA MAIN_LOOP			;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+U2TX_PRG:                               ;;
+        BTFSC U2TXON_F                  ;;
+        RETURN
+        MOV TMR2,W0                     ;;
+        SUB U2TX_REPEAT_TIM,WREG        ;;
+        BTSS W0,#15                     ;;
+        RETURN                          ;;
+        ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+        MOV #SON_DEVICE_ID_K,W0         ;;
+	MOV W0,TX_DEVICE_ID             ;;
+        MOV SON_SERIAL_ID,W0            ;;        
+        DEC W0,W0
+	MOV W0,TX_SERIAL_ID             ;;
+        MOV #0xAB00,W0                  ;;
+	MOV W0,TX_GROUP_ID              ;;
+        ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+        CP0 SON_SERIAL_ID               ;;
+        BRA NZ,GET_SON_INF              ;;
+SON_CMD:                                ;;
+	MOVFF RS485_CMD,UTX_CMD         ;;
+	MOVFF RS485_CMD_PARA0,UTX_PARA0 ;;
+	MOVFF RS485_CMD_PARA1,UTX_PARA1 ;;
+	MOVFF RS485_CMD_PARA2,UTX_PARA2 ;;
+	MOVFF RS485_CMD_PARA3,UTX_PARA3 ;;
+        CLR UTX_BUFFER_LEN              ;;        
+        BRA U2TX_PRG_1                  ;;
+GET_SON_INF:
+	MOV #0x1000,W0                  ;;
+	MOV W0,UTX_CMD                  ;;
+        CLR UTX_PARA0           
+        CLR UTX_PARA1           
+        CLR UTX_PARA2           
+        CLR UTX_PARA3           
+        CLR UTX_BUFFER_LEN              ;;        
+U2TX_PRG_1:                              ;;
+        CLR RS485_CMD                   ;;
+        CLR RS485_CMD_PARA0             ;;
+        CLR RS485_CMD_PARA1             ;;
+        CLR RS485_CMD_PARA2             ;;
+        CLR RS485_CMD_PARA3             ;;
+	BSF U1U2_F                      ;;
+	CALL UTX_STD                    ;;
+        ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+        INC SON_SERIAL_ID               ;;
+        MOV #5,W0                       ;;
+        CP SON_SERIAL_ID                ;;
+        BRA GEU,$+4                     ;;
+        RETURN                          ;;
+        MOVLF #1,SON_SERIAL_ID          ;;
+	RETURN                          ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+
+
+
 
 
 .ENDIF
-
-
-
 
 
 
@@ -2745,22 +4182,20 @@ CHK_U1RX_B:				;;
 CHK_U1RX_1:				;;
 	MOV W1,RX_ADDR			;;
 	MOV [W1++],W0			;;
-	MOV #PCIO_DEVICE_ID_K,W2	;;
+	MOV W0,RX_DEVICE_ID		;;
+	MOV #DEVICE_ID_K,W2	        ;;
 	CP W0,W2			;;
 	BRA Z,CHK_U1RX_2		;;
 	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;	
-	MOV #PCUI_DEVICE_ID_K,W2	;;
-	CP W0,W2			;;
-	BRA Z,CHK_U1RX_2		;;
-	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	MOV #0xFFFF,W2			;;
 	CP W0,W2			;;
 	BRA Z,CHK_U1RX_2		;;
 	RETURN				;;
 CHK_U1RX_2:				;;
-	MOV W0,RX_DEVICE_ID		;;
 	MOV [W1++],W0			;;
-	MOV #SERIAL_ID_K,W2		;;
+	MOV W0,RX_SERIAL_ID		;;
+        ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+        MOV MY_SLOT_ID,W2               ;;
 	CP W0,W2			;;
 	BRA Z,CHK_U1RX_3		;;
 	MOV #0xFFFF,W2			;;
@@ -2769,7 +4204,13 @@ CHK_U1RX_2:				;;
 	RETURN				;;
 CHK_U1RX_3:				;;
 	MOV [W1++],W0			;;
-	MOV W0,RX_FLAGS			;;
+	MOV W0,RX_GROUP_ID		;;
+        SWAP W0                         ;;
+        AND #255,W0                     ;;
+        CP W0,#0xAB                     ;;        
+        BRA Z,$+4                       ;;
+        RETURN                          ;;
+        ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	MOV [W1++],W0			;;
 	MOV W0,RX_LEN			;;
 	MOV [W1++],W0			;;
@@ -2792,41 +4233,275 @@ CHK_U1RX_3:				;;
 	GOTO URXDEC_SYSTEM_ACT		;;
 	CP W0,#0x10			;;
 	BRA NZ,$+6			;;
-	GOTO URXDEC_PCSLOT_ACT		;;
+	GOTO URXDEC_SLOT_ACT		;;
+	CP W0,#0x20			;;
+	BRA NZ,$+6			;;
+	GOTO URXDEC_CMD_ACT		;;
 	RETURN				;;
+        RETURN
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-URXDEC_PCSLOT_ACT:			;;
+URXDEC_SLOT_ACT:			;;
+        BSF CONN485_F                   ;;
+        CLR CONN485_TIM                 ;;
 	MOV RX_CMD,W0			;;
 	AND #255,W0			;;
 	CP W0,#1			;;
 	BRA LTU,$+4			;;
 	RETURN				;;
 	BRA W0				;;
-	BRA U1RX_00J			;;RETURN SLOT INF
-U1RX_00J:				;;
-	MOV RX_PARA0,W0			;;
-	AND #15,W0			;;
-	MOV W0,SLOTSTA_FLAG		;;	
-	MOV RX_PARA1,W0			;;
-	MOV W0,CHANNEL_FLAG		;;	
-	MOV RX_PARA2,W0			;;
-	MOV W0,IPADR0			;;	
-	MOV RX_PARA3,W0			;;
-	MOV W0,IPADR1			;;	
-	MOV RX_ADDR,W1			;;
-	ADD #18,W1			;;
-	MOV [W1++],W0			;;
-	MOV W0,LEDPNL_FLAG0		;;
-	MOV [W1++],W0			;;
-	MOV W0,LEDPNL_FLAG1		;;
-	CLR UICON_TIM			;;
-	BSF UICON_F			;;
+	BRA U1RX_SLOT_00J		;;RETURN SLOT INF
+        RETURN                          ;;        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+U1RX_SLOT_00J:				;;
+        CLR MY_ITEM_ID                  ;;        
+        BTFSC SWS4_I                    ;;        
+        BSET MY_ITEM_ID,#0              ;;
+        BTFSC SWS5_I                    ;;
+        BSET MY_ITEM_ID,#1              ;;
+        BTFSC SWS6_I                    ;;
+        BSET MY_ITEM_ID,#2              ;;
+        BTFSC SWS7_I                    ;;
+        BSET MY_ITEM_ID,#3              ;;
+        ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+        MOV #DEVICE_ID_K,W0             ;;
+	MOV W0,TX_DEVICE_ID             ;;
+        MOV MY_SLOT_ID,W0               ;;      
+	MOV W0,TX_SERIAL_ID             ;;
+        MOV #0xAC00,W0                  ;;
+	MOV W0,TX_GROUP_ID              ;;
+	MOV #0x1000,W0                  ;;
+	MOV W0,UTX_CMD                  ;;
+        ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+        MOV MY_TYPE_ID,W2               ;;
+        MOV MY_ITEM_ID,W0               ;;
+        SL W0,#4,W0                     ;;
+        IOR W0,W2,W2                    ;;
+        MOV SLOT_STATUS,W0              ;;
+        SL W0,#8,W0                     ;;
+        IOR W0,W2,W2                    ;;
+        MOV SLOT_TEST_STATUS,W0         ;;
+        SL W0,#10,W0                    ;;
+        IOR W0,W2,W2                    ;;
+	MOV W2,W0                       ;;
+	MOV W0,UTX_PARA0                ;;
+        ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+        MOV MY_TYPE_ID,W0               ;;
+        CP W0,#6                        ;;
+        BRA Z,RET_RF_SLOT               ;;
+        ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+        CP W0,#8                        ;;
+        BRA Z,RET_SSPADRV_SLOT          ;;
+        ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+        CP W0,#3                        ;;
+        BRA Z,RET_IO_SLOT               ;;
+        ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	MOV #0x0000,W0                  ;;
+	MOV W0,UTX_PARA1                ;;
+	MOV #0x0000,W0                  ;;
+	MOV W0,UTX_PARA2                ;;        
+	MOV #0x0000,W0                  ;;
+	MOV W0,UTX_PARA3                ;;
+        CLR UTX_BUFFER_LEN              ;;        
+	BCF U1U2_F                      ;;
+	CALL UTX_STD                    ;;
+        RETURN                          ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;        
+RET_SSPADRV_SLOT:                       ;;
+	MOV #0x0000,W0                  ;;
+	MOV W0,UTX_PARA1                ;;
+	MOV #0x0000,W0                  ;;
+	MOV W0,UTX_PARA2                ;;        
+	MOV #0x0000,W0                  ;;
+	MOV W0,UTX_PARA3                ;;
+        MOVLF #40,UTX_BUFFER_LEN        ;;        
+        MOV #SLOTINF_BUF,W3             ;;
+	BCF U1U2_F                      ;;
+	CALL UTX_STD                    ;;
+        RETURN                          ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+RET_RF_SLOT:                            ;;
+	MOV #0x0000,W0                  ;;
+	MOV W0,UTX_PARA1                ;;
+	MOV #0x0000,W0                  ;;
+	MOV W0,UTX_PARA2                ;;
+        MOV #GPS_DATA_BUF,W3            ;;
+        MOV GPS_DATA_LEN,W0             ;;
+        LSR W0,#1,W0                    ;;
+        MOV W0,UTX_PARA3                ;;        
+        MOV W0,UTX_BUFFER_LEN           ;;
+	BCF U1U2_F                      ;;
+	CALL UTX_STD                    ;;
+        RETURN                          ;;
+;;========================================
+RET_IO_SLOT:                            ;;
+	MOV #0x0000,W0                  ;;
+	MOV W0,UTX_PARA1                ;;
+	MOV #0x0000,W0                  ;;
+	MOV W0,UTX_PARA2                ;;        
+	MOV #0x0000,W0                  ;;
+	MOV W0,UTX_PARA3                ;;
+        MOVLF #5,UTX_BUFFER_LEN         ;;        
+        MOV #ADI0BUF,W3                 ;;
+	BCF U1U2_F                      ;;
+	CALL UTX_STD                    ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+URXDEC_CMD_ACT:			        ;;
+	MOV RX_CMD,W0			;;
+	AND #255,W0			;;
+	CP W0,#11			;;
+	BRA LTU,$+4			;;
 	RETURN				;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;	
+	BRA W0				;;
+	BRA U1RX_CMD_00J		;;SSPA POWER ON
+	BRA U1RX_CMD_01J		;;SSPA POWER OFF
+	BRA U1RX_CMD_02J		;;SSPA MODULE ON
+	BRA U1RX_CMD_03J		;;SSPA MOUDLE OFF
+	BRA U1RX_CMD_04J		;;LOCAL PULSE ON
+	BRA U1RX_CMD_05J		;;LOCAL PULSE OFF
+	BRA U1RX_CMD_06J		;;EMERGENCY ON
+	BRA U1RX_CMD_07J		;;EMERGENCY OFF
+	BRA U1RX_CMD_08J		;;selfTestStartAll
+	BRA U1RX_CMD_09J		;;selfTestStopAll
+	BRA U1RX_CMD_0AJ		;;selfTestStopAll
+        RETURN                          ;;        
+U1RX_CMD_00J:				;;
+U1RX_CMD_01J:				;;
+U1RX_CMD_02J:				;;
+U1RX_CMD_03J:				;;
+        .IFDEF JS203_39A_F01_02         ;;
+        MOVFF RX_CMD,RS485_CMD          ;;
+        CALL GET_ACT_BIT                ;;
+        CLR RS485_CMD_PARA1             ;;
+        CLR RS485_CMD_PARA2             ;;
+        MOVFF RX_PARA3,RS485_CMD_PARA3  ;;
+        CLR SON_SERIAL_ID               ;;
+        .ENDIF                          ;;
+        RETURN                          ;;
+U1RX_CMD_04J:				;;
+U1RX_CMD_05J:				;;
+U1RX_CMD_06J:				;;
+U1RX_CMD_07J:				;;
+        .IFDEF JS203_39A_F01_02         ;;
+        MOVFF RX_CMD,RS485_CMD          ;;
+        MOVFF RX_PARA0,RS485_CMD_PARA0  ;;
+        MOVFF RX_PARA1,RS485_CMD_PARA1  ;;
+        MOVFF RX_PARA2,RS485_CMD_PARA2  ;;
+        MOVFF RX_PARA3,RS485_CMD_PARA3  ;;
+        CLR SON_SERIAL_ID               ;;
+        .ENDIF
+        RETURN                          ;;
+;;========================================
+U1RX_CMD_08J:				;;
+        MOVLF #1,SLOT_TEST_STATUS       ;;
+        RETURN
+U1RX_CMD_09J:				;;
+        MOVLF #0,SLOT_TEST_STATUS       ;;
+        RETURN
+U1RX_CMD_0AJ:				;;
+        MOV MY_SLOT_ID,W0               ;;
+        CP RX_PARA0
+        BRA Z,$+4
+        RETURN
+        MOVLF #2,SLOT_TEST_STATUS       ;;
+        CLR SLOT_TEST_TIM
+        RETURN
+
+
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+GET_ACT_BIT:                            ;;
+        MOV MY_ITEM_ID,W0               ;;
+        SL W0,#2,W0                     ;;
+        DEC2 W0,W0                      ;;
+        CP0 RX_PARA0                    ;;
+        BRA NZ,$+4                      ;;
+        CLR W0                          ;;
+        MOV W0,R0                       ;;START_BIT
+        ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+        CLR RS485_CMD_PARA0             ;;
+        ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;        
+        CLR R2                          ;;
+GET_ACT_BIT_1:				;;
+        MOV #RX_PARA0,W1                ;;
+        MOV R0,W0                       ;;        
+        CALL CHK_BIT_ON                 ;;
+        INC R0                          ;;
+        BTFSC YES_F                      ;;
+        MOV #1,W0                       ;;
+        MOV R2,W2                       ;;
+        SL W0,W2,W0                     ;;
+        IOR RS485_CMD_PARA0             ;;
+        INC R2                          ;;
+        MOV #4,W0                       ;;
+        CP R2                           ;;
+        BRA LTU,GET_ACT_BIT_1           ;;
+        RETURN                          ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+CHK_BIT_ON:
+        BCF YES_F
+        PUSH W0 
+        MOV #1,W2
+        AND #15,W0
+        SL W2,W0,W2
+        POP W0
+        ASR W0,#4,W0
+        ADD W0,W1,W1
+        ADD W0,W1,W1
+        MOV [W1],W0 
+        AND W0,W2,W0
+        BRA Z,$+4
+        BSF YES_F
+        RETURN
+
+
+/*
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+URXDEC_MAIN_ACT:			;;	
+	MOV RX_CMD,W0			;;
+	AND #3,W0			;;
+	BRA W0				;;
+	BRA MAIN_ACT_J0			;;
+	BRA MAIN_ACT_J1			;;
+	BRA MAIN_ACT_J2			;;
+	BRA MAIN_ACT_J3			;;
+MAIN_ACT_J0:				;;
+	MOV #3,W0			;;
+	AND RX_SERIAL_ID		;;
+	MOV #32,W0			;;
+	CP URX_PARA3			;;PARA WORD LEN
+	BRA LTU,$+4			;;	
+	RETURN				;;
+	MOVFF URX_PARA3,MONI_DATA_LEN	;;
+	MOV #64,W0			;;
+	MUL RX_SERIAL_ID		;;	
+	MOV #SSPA_DATA_BUF,W1		;;
+	ADD W2,W1,W1			;;
+	MOV URX_BUF_ADR,W3		;;	
+MAIN_ACT_J0_1:				;;
+	CP0 URX_PARA3			;;
+	BRA Z,MAIN_ACT_J0_2		;;
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	MOV [W3++],W0			;;sspa_rfout
+	MOV W0,[W1++]			;;
+	DEC URX_PARA3			;;
+	BRA MAIN_ACT_J0_1		;;	
+MAIN_ACT_J0_2:				;;
+	RETURN				;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+*/
+
+
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2963,32 +4638,26 @@ CHK_U2RX_B:				;;
 CHK_U2RX_1:				;;
 	MOV W1,RX_ADDR			;;
 	MOV [W1++],W0			;;
-	MOV W0,TARGET_DEVICE_ID		;;
+	MOV W0,RX_DEVICE_ID		;;
 	MOV [W1++],W0			;;
-	MOV W0,TARGET_SERIAL_ID		;;
+	MOV W0,RX_SERIAL_ID		;;
 	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-	MOV #SLOT_DEVICE_ID_K,W0	;;	
-	CP TARGET_DEVICE_ID		;;
+	MOV #SON_DEVICE_ID_K,W0	        ;;	
+	CP RX_DEVICE_ID		        ;;
 	BRA Z,$+4			;;
 	RETURN				;;
 	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-	MOV #0xFFFF,W0			;;
-	CP TARGET_SERIAL_ID		;;
-	BRA NZ,$+6			;;
-	MOV SELF_SERIAL_ID,W0		;;
-	MOV W0,TARGET_SERIAL_ID		;;	
-	MOV SELF_SERIAL_ID,W0		;;
-	CP TARGET_SERIAL_ID		;;
-	BRA Z,$+4			;;
-	RETURN				;;
+        MOV #4,W0                       ;;
+        CP RX_SERIAL_ID	        	;;
+        BRA LTU,$+4                     ;;
+        RETURN                          ;;
 	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	MOV [W1++],W0			;;
-	MOV W0,RX_FLAGS			;;
-	SWAP W0				;;
-	AND #255,W0			;;
-	CP W0,#0xAB			;;PACK ID
-	BRA Z,$+4			;;
-	RETURN				;;
+	MOV W0,RX_GROUP_ID		;;
+        MOV #0XAC00,W0                  ;;
+        CP RX_GROUP_ID                  ;;
+        BRA Z,$+4                       ;;
+        RETURN                          ;;
 	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	MOV [W1++],W0			;;
 	MOV W0,RX_LEN			;;
@@ -3023,33 +4692,28 @@ DECU2RX_10XX:				;;
 	BRA DECU2RX_1001J		;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;	
 ;%2					;;
-;;GET SLOT INF				;;	
-;;PARA 0=DELAY US * SLOT CNT TO RESPONESE		
 DECU2RX_1000J:				;;
-	MOV #ALLSLOT_INF_ADR,W3		;;
-	MOV RX_ADDR,W1			;;
-	ADD #18,W1			;;
-	MOV #64,W2			;;
-DU2RX1000J_1:				;;
+        MOV #20,W0                      ;;
+        MUL RX_SERIAL_ID                ;;                      
+        MOV #SLOTINF_BUF,W3             ;;
+        ADD W2,W3,W3                    ;;
+        MOV #10,W2
+DECU2RX_1000J_1:
 	MOV [W1++],W0			;;
-	MOV W0,[W3++]			;;
-	DEC W2,W2			;;
-	BRA NZ,DU2RX1000J_1 		;;
-	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-	MOVLF #1,U2TXACT_INX		;;
-	MOVFF RX_CMD,U2TXACT_PARA0	;;
-	MOVFF URX_PARA0,U2TXACT_PARA1	;;
-	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-	CLR CTRCON_TIM			;;
-	BSF CTRCON_F			;;
-	RETURN				;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+        MOV W0,[W3++]                    ;;
+        DEC W2,W2
+        BRA NZ,DECU2RX_1000J_1
+        RETURN
 DECU2RX_1001J:				;;
 	RETURN				;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-
-
-
+COMBIW3:
+        AND #15,W2
+        SL W2,#12,W2
+        IOR W0,W2,W0
+        MOV W0,[W3++]
+        
 
 
 
@@ -3118,97 +4782,49 @@ UTX_RECOK:				;;
 	CLR UTX_PARA1			;;
 	CLR UTX_PARA2			;;
 	CLR UTX_PARA3			;;
-	BRA UTX_STD_ALL			;;
+	BRA UTX_STD			;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 UTX_I_HAVE_REC:				;;
 	MOV #0x0000,W0			;;
 	MOV W0,UTX_CMD			;;
-	BRA UTX_STD_ALL			;;
+	BRA UTX_STD			;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 UTX_I_AM_BUZY:				;;
 	MOV #0x0001,W0			;;
 	MOV W0,UTX_CMD			;;
-	BRA UTX_STD_ALL			;;
+	BRA UTX_STD			;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 UTX_I_AM_ERR:				;;
 	MOV #0x0002,W0			;;
 	MOV W0,UTX_CMD			;;
-	BRA UTX_STD_ALL			;;
+	BRA UTX_STD			;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 UTX_I_AM_DONE:				;;
 	MOV #0x0003,W0			;;
 	MOV W0,UTX_CMD			;;
-	BRA UTX_STD_ALL			;;
+	BRA UTX_STD			;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 UTX_YOU_NEXT:				;;
 	MOV #0x0004,W0			;;
 	MOV W0,UTX_CMD			;;
-	BRA UTX_STD_ALL			;;
+	BRA UTX_STD			;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 UTX_YOU_WAIT:				;;
 	MOV #0x0005,W0			;;
 	MOV W0,UTX_CMD			;;
-	BRA UTX_STD_ALL			;;
+	BRA UTX_STD			;;
 UTX_YOU_STOPALL:			;;
 	MOV #0x0006,W0			;;
 	MOV W0,UTX_CMD			;;
-	BRA UTX_STD_ALL			;;
+	BRA UTX_STD			;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 UTX_RXDATA_ERR:				;;
 	MOV #0x0007,W0			;;
 	MOV W0,UTX_CMD			;;
-	BRA UTX_STD_ALL			;;
+	BRA UTX_STD			;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-UTX_BUFFER_ID:				;;
-	CALL UTX_START			;;
-	CALL LOAD_UTX_DEVICE_ID		;;
-	MOV TARGET_SERIAL_ID,W0		;;
-	CALL LOAD_UTX_WORD		;;
-	BRA UTX_BUFFER_0		;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;UTX_BUFFER_LEN				;;
-;W3 BUFFER ADDRESS			;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-UTX_BUFFER:				;;
-	CALL UTX_START			;;
-	CALL LOAD_UTX_DEVICE_ID		;;
-	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-	MOV #0xFFFF,W0			;;SERIAL ID
-	CALL LOAD_UTX_WORD		;;
-	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-UTX_BUFFER_0:
-	MOV UTX_FLAG,W0			;;FLAG
-	CALL LOAD_UTX_WORD		;;
-	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-	MOV UTX_BUFFER_LEN,W0		;;
-	ADD #10,W0			;;
-	CALL LOAD_UTX_WORD		;;
-	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-	MOV UTX_CMD,W0			;;
-	CALL LOAD_UTX_WORD		;;
-	MOV UTX_PARA0,W0		;;
-	CALL LOAD_UTX_WORD		;;
-	MOV UTX_PARA1,W0		;;
-	CALL LOAD_UTX_WORD		;;
-	MOV UTX_PARA2,W0		;;
-	CALL LOAD_UTX_WORD		;;
-	MOV UTX_PARA3,W0		;;
-	CALL LOAD_UTX_WORD		;;
-	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-UTX_BUFFER_1:				;;
-	CALL GET_W3_BYTE		;;
-	CALL LOAD_UTX_BYTE		;;
-	DEC UTX_BUFFER_LEN		;;
-	BRA NZ,UTX_BUFFER_1		;;
-	CALL UTX_END			;;
-	RETURN				;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
 GET_W3_BYTE:
@@ -3229,39 +4845,6 @@ GET_W3_BYTE_1:
 
 
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-LOAD_UTX_DEVICE_ID:			;;
-	BTSC UTXCHN_FLAG,#0		;;
-	BRA LUDI_0 			;;
-	BTSC UTXCHN_FLAG,#1		;;
-	BRA LUDI_1 			;;
-	RETURN				;;
-LUDI_0:					;;	
-	MOV #PCUI_DEVICE_ID_K,W0	;;
-	CALL LOAD_UTX_BYTE		;;
-	MOV #PCUI_DEVICE_ID_K,W0	;;
-	SWAP W0				;;
-	CALL LOAD_UTX_BYTE		;;
-	RETURN				;;
-LUDI_1:					;;
-	MOV #SLOTCTR_DEVICE_ID_K,W0	;;
-	CALL LOAD_UTX_BYTE		;;
-	MOV #SLOTCTR_DEVICE_ID_K,W0	;;
-	SWAP W0				;;
-	CALL LOAD_UTX_BYTE		;;
-	RETURN				;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;			
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-LOAD_SELF_DEVICE_ID:			;;
-	MOV #SLOT_DEVICE_ID_K,W0	;;
-	CALL LOAD_UTX_BYTE		;;
-	MOV #SLOT_DEVICE_ID_K,W0	;;
-	SWAP W0				;;
-	CALL LOAD_UTX_BYTE		;;
-	RETURN				;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;			
 
 
 
@@ -3285,34 +4868,25 @@ LOAD_UTX_WORD:				;;
 ;CHKSUM0:XOR INIT=0XAB
 ;CHKSUM1:ADD INIT=0X00
 
+
+;UTX_BUFFER_LEN				;;
+;W3 BUFFER ADDRESS			;;
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-UTX_STD_RESP:				;;
-	CALL UTX_START			;;
-	CALL LOAD_SELF_DEVICE_ID	;;
-	MOV SELF_SERIAL_ID,W0		;;
-	CALL LOAD_UTX_WORD		;;
-	BRA UTX_STD_1			;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-UTX_STD_ONE:				;;
-	CALL UTX_START			;;
-	CALL LOAD_UTX_DEVICE_ID		;;
-	MOV TARGET_SERIAL_ID,W0		;;
-	CALL LOAD_UTX_WORD		;;
-	BRA UTX_STD_1			;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-UTX_STD_ALL:				;;
-	CALL UTX_START			;;
-	CALL LOAD_UTX_DEVICE_ID		;;
-	MOV #0xFFFF,W0			;;SERIAL ID
-	CALL LOAD_UTX_WORD		;;
-	BRA UTX_STD_1			;;
 UTX_STD:				;;
 	CALL UTX_START			;;
-UTX_STD_1:				;;
-	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-	MOV UTX_FLAG,W0			;;FLAG
+	MOV TX_DEVICE_ID,W0		;;
 	CALL LOAD_UTX_WORD		;;
-	MOV #10,W0			;;LEN
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	MOV TX_SERIAL_ID,W0		;;SERIAL ID
+	CALL LOAD_UTX_WORD		;;
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	MOV TX_GROUP_ID,W0		;;SERIAL ID
+	CALL LOAD_UTX_WORD		;;
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	MOV #10,W0			;;LEN LOW BYTE
+	ADD UTX_BUFFER_LEN,WREG		;;
+	ADD UTX_BUFFER_LEN,WREG		;;
 	CALL LOAD_UTX_WORD		;;
 	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	MOV UTX_CMD,W0			;;
@@ -3330,6 +4904,14 @@ UTX_STD_1:				;;
 	MOV UTX_PARA3,W0		;;
 	CALL LOAD_UTX_WORD		;;
 	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+UTX_STD_1:				;;
+	CP0 UTX_BUFFER_LEN		;;	
+	BRA Z,UTX_STD_2			;;
+	MOV [W3++],W0			;;
+	CALL LOAD_UTX_WORD		;;
+	DEC UTX_BUFFER_LEN		;;
+	BRA UTX_STD_1			;;
+UTX_STD_2:				;;
 	CALL UTX_END			;;
 	RETURN				;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -3343,24 +4925,14 @@ UTX_STD_1:				;;
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 UTX_START:				;;
-	BTSC UTXCHN_FLAG,#0		;;
-	BCF U1TX_EN_F			;;
-	BTSC UTXCHN_FLAG,#1		;;
-	BCF U2TX_EN_F			;;
-	BTSC UTXCHN_FLAG,#4		;;
-	BCF MCUTX3_EN_F			;;
-	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;		
 	CLR UTX_BTX			;;
 	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	MOV #0xAB,W0			;;
 	MOV W0,UTX_CHKSUM0		;;
 	CLR UTX_CHKSUM1			;;
-	BTSC UTXCHN_FLAG,#0		;;
 	MOV #U1TX_BUF,W1		;;
-	BTSC UTXCHN_FLAG,#1		;;
+	BTFSC U1U2_F    		;;
 	MOV #U2TX_BUF,W1		;;
-	BTSC UTXCHN_FLAG,#4		;;
-	MOV #TMP_BUF+2,W1		;;
 	MOV #0xEA,W0			;;
 	CALL LOAD_UBYTE_A		;;
 	RETURN				;;
@@ -3381,37 +4953,34 @@ UTX_END:				;;
 	CALL LOAD_UBYTE_B		;;
 	MOV #0xEB,W0			;;
 	CALL LOAD_UBYTE_A		;;
-	BTSC UTXCHN_FLAG,#0		;;
+        BTFSS U1U2_F                    ;;
 	BRA U1TX_END			;;
-	BTSC UTXCHN_FLAG,#1		;;
 	BRA U2TX_END			;;
-	BTSC UTXCHN_FLAG,#4		;;
-	BRA MCUTX3_END			;;
-	RETURN				;;
 U1TX_END:				;;
+	BSF U1TX_EN_F			;;
+	BCF U1RX_EN_F			;;
+	BSF RS485_DE_O	        	;;
+        BSF U1TXON_F                    ;;
+	BCF U1TX_END_F			;;
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	MOVFF UTX_BTX,U1TX_BTX		;;
 	CLR U1TX_BCNT			;;
-	BSF U1TX_EN_F			;;
 	BSET IFS0,#U1TXIF		;;
 	RETURN				;;
 U2TX_END:				;;
+	BSF U2TX_EN_F			;;
 	BCF U2RX_EN_F			;;
 	BSF RS485EX_DE_O		;;
+        BSF U2TXON_F                    ;;
 	BCF U2TX_END_F			;;
 	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	MOVFF UTX_BTX,U2TX_BTX		;;
 	CLR U2TX_BCNT			;;
-	BSF U2TX_EN_F			;;
 	BSET IFS1,#U2TXIF		;;
 	RETURN				;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-MCUTX3_END:				;;
-	MOV #TMP_BUF,W1			;;
-	MOV UTX_BTX,W0			;;
-	MOV W0,[W1]			;;
-	CALL TRANS_MCUTX3
-	RETURN				;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 LOAD_UBYTE_A:				;;
@@ -3520,27 +5089,6 @@ __INT1Interrupt:			;;
 	PUSH SR
 	PUSH W0
 	BCLR IFS1,#INT1IF		;;
-	/*
-	BSET SR,#C			;;
-	BTFSS I2C_SDA_I			;;
-	BCLR SR,#C			;;
-	RLC I2C_DATA2_B			;;
-	RLC I2C_DATA1_B			;;
-	RLC I2C_DATA0_B			;;
-	MOV #0xABCD,W0			;;
-	CP I2C_DATA0_B			;;
-	BRA NZ,INT1I_END		;;
-	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-	MOV I2C_DATA1_B,W0		;;
-	CP I2C_DATA2_B			;;
-	BRA NZ,INT1I_END		;;	
-	MOV I2C_DATA0_B,W0		;;
-	MOV W0,I2C_DATA0		;;
-	MOV I2C_DATA1_B,W0		;;
-	MOV W0,I2C_DATA1		;;
-	MOV I2C_DATA2_B,W0		;;
-	MOV W0,I2C_DATA2		;;
-	*/
 INT1I_END:				;;
 	POP W0
 	POP SR
@@ -3660,107 +5208,6 @@ U1RXI_END:				;;
 
 
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-__U2RXInterrupt:			;;
-	PUSH SR				;;
-	PUSH W0				;;
-	PUSH W1				;;
-	BCLR IFS1,#U2RXIF		;;
-	MOV U2RXREG,W1			;;
-	AND #255,W1			;;
-	BTFSS U2RX_EN_F			;;
-	BRA U2RXI_END			;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-	MOV #0xEA,W0			;;
-	CP W0,W1			;;
-	BRA Z,U2RXI_PS			;;	
-	MOV #0xEB,W0			;;
-	CP W0,W1			;;
-	BRA Z,U2RXI_PE			;;	
-	MOV #0xEC,W0			;;
-	CP W0,W1			;;
-	BRA Z,U2RXI_PT			;;	
-	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-	MOV #0xAB,W0			;; 
-	BTFSC U2RXT_F			;;
-	XOR W0,W1,W1			;;
-	BCF U2RXT_F			;;
-	MOV #U2RX_BUFSIZE,W0		;;
-	CP U2RX_BYTE_PTR		;;
-	BRA GEU,U2RXI_END		;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-	MOV #U2RX_BUFA,W0		;;
-	BTFSC U2RX_BUFAB_F		;;
-	MOV #U2RX_BUFB,W0		;;
-	ADD U2RX_BYTE_PTR,WREG		;;
-	BCLR W0,#0			;;
-	BTSC U2RX_BYTE_PTR,#0		;;
-	BRA U2RXI_1			;;
-	MOV W1,[W0]			;;
-	BRA U2RXI_2			;;
-U2RXI_1:				;;
-	SWAP W1				;;
-	ADD W1,[W0],[W0]		;;
-	SWAP W1				;;
-U2RXI_2:				;;
-	MOV U2RX_TMP0,W0		;;
-	MOV W0,U2RX_TMP1		;;
-	MOV W1,W0			;;
-	MOV W0,U2RX_TMP0		;;
-	MOV W1,W0			;;
-	ADD U2RX_ADDSUM			;;	
-	XOR U2RX_XORSUM			;;
-	INC U2RX_BYTE_PTR		;;
-	BRA U2RXI_END			;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-U2RXI_PS:				;;
-	BCF U2RXT_F			;;
-	CLR U2RX_BYTE_PTR		;;
-	CLR U2RX_ADDSUM			;;
-	CLR U2RX_XORSUM			;;
-	BSF MASTER_U2RX_F		;;
-	BRA U2RXI_END			;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-U2RXI_PE:				;;
-	BCF U2RXT_F			;;
-	MOV #0xAB,W0			;;
-	XOR U2RX_XORSUM,WREG		;;	
-	XOR U2RX_TMP0,WREG		;;
-	BRA NZ,U2RXI_END		;;
-	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-	MOV U2RX_TMP0,W0		;;
-	ADD U2RX_TMP0,WREG		;;
-	ADD U2RX_TMP1,WREG		;;
-	XOR U2RX_ADDSUM,WREG		;;
-	AND #255,W0			;;
-	BRA NZ,U2RXI_END		;;
-	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-	MOV U2RX_BYTE_PTR,W0		;;	
-	BTFSS U2RX_BUFAB_F		;;	
-	MOV W0,U2RXA_LEN		;;
-	BTFSC U2RX_BUFAB_F		;;	
-	MOV W0,U2RXB_LEN		;;
-	BTFSS U2RX_BUFAB_F		;;	
-	BSF U2RX_PACKA_F		;;
-	BTFSC U2RX_BUFAB_F		;;	
-	BSF U2RX_PACKB_F		;;
-	TG U2RX_BUFAB_F			;;	
-	MOV TMR2,W0			;;
-	MOV W0,U2RX_PACK_TIME		;;	
-	BRA U2RXI_END			;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-U2RXI_PT:				;;
-	BSF U2RXT_F			;;
-	BRA U2RXI_END			;;
-U2RXI_END:				;;	
-	POP W1				;;
-	POP W0				;;
-	POP SR				;;
-	RETFIE				;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-
-
 
 
 
@@ -3775,9 +5222,9 @@ __U1TXInterrupt:			;;
 	PUSH W0				;;
 	PUSH W1				;;
 	BCLR IFS0,#U1TXIF		;;
-	BTFSS U1TX_EN_F			;;
-	BRA U1TXI_END			;;
 	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+        BTFSS U1TX_EN_F                 ;;
+        BRA U1TXI_END                   ;;
 	MOV #U1TX_BUF,W1		;;
 	MOV U1TX_BCNT,W0		;;
 	ADD W0,W1,W1			;;
@@ -3791,7 +5238,9 @@ __U1TXInterrupt:			;;
 	MOV U1TX_BTX,W0			;;
 	CP U1TX_BCNT			;;
 	BRA LTU,U1TXI_END		;;
-	BCF U1TX_EN_F			;;
+        BCF U1TX_EN_F                   ;;
+	BSF U1TX_END_F			;;
+	BSF U1RX_EN_F			;;
 U1TXI_END:				;;
 	POP W1				;;
 	POP W0				;;
@@ -3807,9 +5256,8 @@ __U2TXInterrupt:			;;
 	PUSH W0				;;
 	PUSH W1				;;
 	BCLR IFS1,#U2TXIF		;;
-	BTFSS U2TX_EN_F			;;
-	BRA U2TXI_END			;;
-	CLR U2TX_WAKE_TIM		;;	
+        BTFSS U2TX_EN_F                 ;;
+        BRA U2TXI_END                   ;;
 	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	MOV #U2TX_BUF,W1		;;
 	MOV U2TX_BCNT,W0		;;
@@ -3824,7 +5272,7 @@ __U2TXInterrupt:			;;
 	MOV U2TX_BTX,W0			;;
 	CP U2TX_BCNT			;;
 	BRA LTU,U2TXI_END		;;
-	BCF U2TX_EN_F			;;
+        BCF U2TX_EN_F                   ;;
 	BSF U2TX_END_F			;;
 	BSF U2RX_EN_F			;;
 U2TXI_END:				;;
@@ -3834,6 +5282,30 @@ U2TXI_END:				;;
 	RETFIE				;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+
+CHK_U1TX_END:
+	BTFSS U1TX_END_F
+	RETURN
+	BTSS U1STA,#8
+	RETURN
+	BCF U1TX_END_F
+	BCF RS485_DE_O
+        BCF U1TXON_F                    ;;
+	RETURN
+
+
+CHK_U2TX_END:
+	BTFSS U2TX_END_F
+	RETURN
+	BTSS U2STA,#8
+        RETURN
+	BCF U2TX_END_F
+	BCF RS485EX_DE_O
+        BCF U2TXON_F                    ;;
+        MOV #250,W0                     ;;
+        ADD TMR2,WREG                   ;;
+        MOV W0,U2TX_REPEAT_TIM          ;;
+	RETURN
 
 
 
@@ -3909,49 +5381,6 @@ DLYUX:
 
 
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-CONVERT_AD:				;;
-	INC CONVAD_CNT			;;
-	MOV #3,W0			;;
-	CP CONVAD_CNT			;;	
-	BRA LTU,$+4			;;
-	CLR CONVAD_CNT	 		;;
-	MOV CONVAD_CNT,W0 		;;
-	BRA W0				;;
-	BRA CONV_J0			;;
-	BRA CONV_J1			;;
-	BRA CONV_J2			;;
-CONV_J0:				;;
-	MOV #15,W0			;;	
-	MOV W0,AD1CHS0			;;
-	BSET AD1CON1,#SAMP		;;
-	RETURN				;;
-	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-CONV_J1:				;;
-	BCLR AD1CON1,#SAMP		;;
-	RETURN				;;
-CONV_J2:				;;
-	BTSS AD1CON1,#DONE		;;
-	RETURN				;;
-	MOV ADC1BUF0,W0			;;
-	MOV W0,VR1BUF			;;
-	BCLR AD1CON1,#DONE		;;
-	RRC VR1BUF			;;
-	RRC VR1BUF			;;
-	MOV VR1BUF,W0			;;	
-	AND #255,W0			;;
-	SWAP W0				;;
-	MOV #212,W2			;;
-	REPEAT #17			;;
-	DIV.UW W0,W2			;;
-	MOV W0,VR1V			;;
-	SWAP W0				;;
-	AND #255,W0			;;
-	BRA Z,$+6			;;
-	MOV #255,W0			;;
-	MOV W0,VR1V			;;
-	RETURN				;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
 
