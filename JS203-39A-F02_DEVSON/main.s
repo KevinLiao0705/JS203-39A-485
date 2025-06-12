@@ -894,6 +894,7 @@ POWER_ON:			;;
 	CLR ANSELA		;;
 	CLR ANSELB		;;
 	CALL INIT_IO		;;
+
 	;;;;;;;;;;;;;;;;;;;;;;;;;;
 	MOV #20,W1		;;
 WAIT_POWER:			;;
@@ -955,7 +956,7 @@ GET_SERIAL_ID:
         CLR SERIAL_ID
         BTFSC ADDR_A0_I
         BSET SERIAL_ID,#0
-        BTFSC ADDR_A0_I
+        BTFSC ADDR_A1_I
         BSET SERIAL_ID,#1
         RETURN
 
@@ -1148,17 +1149,16 @@ MAIN_LOOP:				;;
 	BTFSC PS_ON_F                   ;;
 	BSET PS_FLAG,#4			;;
 	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-	BCF P50V_EN_O                   ;;
 	BTFSC P50VEN_F                  ;;
-	BCF P50V_EN_IO                  ;;
+	BSF P50V_EN_O                   ;;
 	BTFSS P50VEN_F                  ;;
-        BSF P50V_EN_IO                  ;;
+	BCF P50V_EN_O                   ;;
         ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-	BCF P32V_EN_O                   ;;
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	BTFSC P32VEN_F                  ;;
-	BCF P32V_EN_IO                  ;;
+	BSF P32V_EN_O                   ;;
 	BTFSS P32VEN_F                  ;;
-	BSF P32V_EN_IO                  ;;
+	BCF P32V_EN_O                   ;;
         ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
         BTFSS SSPA_ON_F                 ;;
         BCF SSPA_EN_O                   ;;

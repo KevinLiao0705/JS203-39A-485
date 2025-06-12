@@ -14,9 +14,9 @@
 ;BY DEFINE=============================
 ;	.EQU JS203_39A_F01_02	,1      ;sspa driver
 ;	.EQU JS203_39A_L01_02	,1      ;LA
-;       .EQU JS203_39A_C01_04   ,1      ;FIBER
+        .EQU JS203_39A_C01_04   ,1      ;FIBER
 ;       .EQU JS203_39A_K01_01   ,1     ;io
-        .EQU JS203_39A_K01_02   ,1     ;io
+;       .EQU JS203_39A_K01_02   ,1     ;io
 ;       .EQU JS203_39A_M01_01   ,1     ;RF
 ;
 ;	.EQU 	DEBUG_SLOT_ID_K	        ,0x0001
@@ -237,10 +237,21 @@ TMR3_BUF:		.SPACE 2
 TMR3_FLAG:		.SPACE 2		
 TMR3_IORF:		.SPACE 2
 
-
+WG_FREQ_CH:             .SPACE 2
+ATTENUATE:		.SPACE 2
+IOOUT_FLAG:		.SPACE 2
+SYS_STATUS_0L:          .SPACE 2           
+SYS_STATUS_0H:          .SPACE 2           
+SYS_STATUS_1L:          .SPACE 2           
+SYS_STATUS_1H:          .SPACE 2           
+SYS_FLAG_0L:            .SPACE 2           
+SYS_FLAG_0H:            .SPACE 2           
+SYS_FLAG_1L:            .SPACE 2           
+SYS_FLAG_1H:            .SPACE 2           
 
 PWRON_TIM:		.SPACE 2
 RESET_TIM:		.SPACE 2
+
 
 MULT_TIM:		.SPACE 2
 MULTJ0_CNT:		.SPACE 2
@@ -255,7 +266,10 @@ MULTJ7_CNT:		.SPACE 2
 UICON_TIM:		.SPACE 2
 CTRCON_TIM:		.SPACE 2
 
-
+DRVSON_CLR_TBUF0:       .SPACE 2        
+DRVSON_CLR_TBUF1:       .SPACE 2        
+DRVSON_CLR_TBUF2:       .SPACE 2        
+DRVSON_CLR_TBUF3:       .SPACE 2        
 		
 ;;====================================
 FLAGA:	        	.SPACE 2
@@ -405,7 +419,7 @@ ADI1BUF:	        .SPACE 2
 ADI2BUF:	        .SPACE 2		
 ADI3BUF:	        .SPACE 2		
 ADI4BUF:	        .SPACE 2
-LDFIBUF:                 .SPACE 2		
+LDFIBUF:                .SPACE 2		
 
 
 ;;====================================
@@ -623,8 +637,8 @@ sspaModuleTemprAA[2][36];   12BIT
 .EQU OK_F_P		,9
 .EQU DONE_F		,FLAGA
 .EQU DONE_F_P		,10
-;.EQU CLRGPS_F		,FLAGA
-;.EQU CLRGPS_F_P	,11
+;.EQU EMU_U2TX_F	,FLAGA
+;.EQU EMU_U2TX_F_P	,11
 ;EQU AICIO_AB_F		,FLAGA
 ;EQU AICIO_AB_F_P  	,12
 .EQU MASTER_U1RX_F	,FLAGA
@@ -675,7 +689,7 @@ sspaModuleTemprAA[2][36];   12BIT
 ;FLAGC
 .EQU EMU_U2TX_F 	,FLAGC
 .EQU EMU_U2TX_F_P	,0
-.EQU EMU_DATA_F	,FLAGC
+.EQU EMU_DATA_F	        ,FLAGC
 .EQU EMU_DATA_F_P	,1
 ;.EQU MCURX3_RXIN_F	,FLAGC
 ;.EQU MCURX3_RXIN_F_P	,2
@@ -2140,7 +2154,13 @@ INIT_IO:				;;
 	BSET CNPUG,#CNPUG7              ;;        
 	BSET CNPUG,#CNPUG8              ;;        
 	BSET CNPUG,#CNPUG9              ;;        
-	BSET CNPUA,#CNPUA12             ;;        
+	BSET CNPUA,#CNPUA12             ;;
+	BSET CNPUC,#CNPUC12             ;;        
+	BSET CNPUC,#CNPUC15             ;;        
+	BSET CNPUD,#CNPUD8              ;;        
+	BSET CNPUB,#CNPUB5              ;;        
+
+        
         CLR ANSELA                      ;;
         CLR ANSELB                      ;;
         CLR ANSELC                      ;;
@@ -2570,7 +2590,13 @@ INIT_IO:				;;
 	BSET CNPUG,#CNPUG7              ;;        
 	BSET CNPUG,#CNPUG8              ;;        
 	BSET CNPUG,#CNPUG9              ;;        
-	BSET CNPUA,#CNPUA12             ;;        
+	BSET CNPUA,#CNPUA12             ;;      
+
+	BSET CNPUC,#CNPUC12             ;;        
+	BSET CNPUC,#CNPUC15             ;;        
+	BSET CNPUD,#CNPUD8              ;;        
+	BSET CNPUB,#CNPUB5              ;;        
+  
         CLR ANSELA                      ;;
         CLR ANSELB                      ;;
         CLR ANSELC                      ;;
@@ -2673,7 +2699,8 @@ MAIN_LOOP:				;;
         CALL CONVERT_AD
         CALL CHK_LDFI
         ;=================================
-        CALL EMU_U2TX_PRG                   ;;
+        CALL EMU_U2TX_PRG               ;;
+        CALL IOOUT_PRG
 	BRA MAIN_LOOP			;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 CHK_LDFI:
@@ -2687,6 +2714,29 @@ CHK_LDFI:
         BTFSC LDFI_A3_I
         BSET LDFIBUF,#3
         RETURN
+IOOUT_PRG:
+        MOV IOOUT_FLAG,W0
+        XOR LATC,WREG
+        AND #255,W0
+        XOR LATC
+        BTSS IOOUT_FLAG,#8
+        BCF LDFO_A0_O
+        BTSC IOOUT_FLAG,#8
+        BSF LDFO_A0_O
+        BTSS IOOUT_FLAG,#9
+        BCF LDFO_A1_O
+        BTSC IOOUT_FLAG,#9
+        BSF LDFO_A1_O
+        BTSS IOOUT_FLAG,#10
+        BCF LDFO_A2_O
+        BTSC IOOUT_FLAG,#10
+        BSF LDFO_A2_O
+        BTSS IOOUT_FLAG,#11
+        BCF LDFO_A3_O
+        BTSC IOOUT_FLAG,#11
+        BSF LDFO_A3_O
+        RETURN 
+
 
 
 EMU1_DATA_TBL:
@@ -2694,10 +2744,10 @@ EMU1_DATA_TBL:
         RETLW #0XAA,W0        
         RETLW #0X55,W0        
         RETLW #0X01,W0        
+        RETLW #0X01,W0        
+        RETLW #0X23,W0        
         RETLW #0X02,W0        
-        RETLW #0X3F,W0        
-        RETLW #0X02,W0        
-        RETLW #0X18,W0        
+        RETLW #0X25,W0        
         RETLW #0X03,W0        
         RETLW #0X0A,W0        
         RETLW #0X55,W0        
@@ -2709,10 +2759,10 @@ EMU2_DATA_TBL:
         RETLW #0XAA,W0        
         RETLW #0X55,W0        
         RETLW #0X01,W0        
-        RETLW #0X01,W0        
-        RETLW #0X00,W0        
         RETLW #0X02,W0        
-        RETLW #0X28,W0        
+        RETLW #0X34,W0        
+        RETLW #0X02,W0        
+        RETLW #0X32,W0        
         RETLW #0X03,W0        
         RETLW #0X05,W0        
         RETLW #0X55,W0        
@@ -2726,7 +2776,7 @@ EMU_U2TX_PRG:
         BTFSS T1M_F
         RETURN
         INC EMU_U2TX_TIM
-        MOV #100,W0
+        MOV #50,W0
         CP EMU_U2TX_TIM
         BRA GEU,$+4
         RETURN
@@ -2736,9 +2786,14 @@ EMU_U2TX_PRG:
         INC EMU_U2TX_CNT
         MOV #30,W0
         CP EMU_U2TX_CNT
-        BRA LTU,$+4
-        TG EMU_DATA_F
+        BRA GEU,$+4
         RETURN
+        TG EMU_DATA_F
+        CLR EMU_U2TX_CNT
+        RETURN
+
+
+
 EMU_U2TX_1:
 	BTSS U2STA,#8
 	RETURN
@@ -2753,9 +2808,9 @@ EMU_U2TX_1:
         CP EMU_U2TX_BYTE
         BRA GEU,$+4
         RETURN
-        CLR EMU_U2TX_TIM
         BCF EMU_U2TX_F
         RETURN
+
         
 
 ADCH_TBL:
@@ -3062,7 +3117,13 @@ INIT_IO:				;;
 	BSET CNPUG,#CNPUG7              ;;        
 	BSET CNPUG,#CNPUG8              ;;        
 	BSET CNPUG,#CNPUG9              ;;        
-	BSET CNPUA,#CNPUA12             ;;        
+	BSET CNPUA,#CNPUA12             ;;      
+
+	BSET CNPUC,#CNPUC12             ;;        
+	BSET CNPUC,#CNPUC15             ;;        
+	BSET CNPUD,#CNPUD8              ;;        
+	BSET CNPUB,#CNPUB5              ;;        
+  
         CLR ANSELA                      ;;
         CLR ANSELB                      ;;
         CLR ANSELC                      ;;
@@ -3236,7 +3297,14 @@ INIT_IO:				;;
 	BSET CNPUG,#CNPUG7              ;;        
 	BSET CNPUG,#CNPUG8              ;;        
 	BSET CNPUG,#CNPUG9              ;;        
-	BSET CNPUA,#CNPUA12             ;;        
+	BSET CNPUA,#CNPUA12             ;;  
+
+	BSET CNPUC,#CNPUC12             ;;        
+	BSET CNPUC,#CNPUC15             ;;        
+	BSET CNPUD,#CNPUD8              ;;        
+	BSET CNPUB,#CNPUB5              ;;        
+
+      
         CLR ANSELA                      ;;
         CLR ANSELB                      ;;
         CLR ANSELC                      ;;
@@ -3488,7 +3556,13 @@ INIT_IO:				;;
 	BSET CNPUG,#CNPUG7              ;;        
 	BSET CNPUG,#CNPUG8              ;;        
 	BSET CNPUG,#CNPUG9              ;;        
-	BSET CNPUA,#CNPUA12             ;;        
+	BSET CNPUA,#CNPUA12             ;;     
+
+	BSET CNPUC,#CNPUC12             ;;        
+	BSET CNPUC,#CNPUC15             ;;        
+	BSET CNPUD,#CNPUD8              ;;        
+	BSET CNPUB,#CNPUB5              ;;        
+   
         CLR ANSELA                      ;;
         CLR ANSELB                      ;;
         CLR ANSELC                      ;;
@@ -4017,6 +4091,45 @@ INIT_RAM:
         CLR [W1++]
         RETURN
 
+DRVSON_CLR_PRG:
+        MOV #SLOTINF_BUF,W1             ;;
+        INC DRVSON_CLR_TBUF0        
+        INC DRVSON_CLR_TBUF1        
+        INC DRVSON_CLR_TBUF2        
+        INC DRVSON_CLR_TBUF3
+        MOV #10,W0
+        CP DRVSON_CLR_TBUF0        
+        BRA LTU,$+4
+        BCLR [W1],#0       
+        MOV #20,W0
+        ADD W0,W1,W1         
+        MOV #10,W0
+        CP DRVSON_CLR_TBUF1        
+        BRA LTU,$+4
+        BCLR [W1],#0                
+        MOV #20,W0
+        ADD W0,W1,W1         
+        MOV #10,W0
+        CP DRVSON_CLR_TBUF2        
+        BRA LTU,$+4
+        BCLR [W1],#0                
+        MOV #20,W0
+        ADD W0,W1,W1         
+        MOV #10,W0
+        CP DRVSON_CLR_TBUF3        
+        BRA LTU,$+4
+        BCLR [W1],#0                
+        RETURN
+
+
+DEBUG_PRG:
+        INC DEBUG_CNT
+        MOV #100,W0
+        CP DEBUG_CNT
+        BRA LTU,$+4
+        CLR DEBUG_CNT
+        RETURN
+
 ;$1 DRV
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 MAIN:	                                ;;
@@ -4033,6 +4146,12 @@ MAIN_LOOP:				;;
 	BTFSC T128M_F			;;
 	TG TP1_O			;;
 	CLRWDT				;;
+        BTFSC T16M_F                    ;;
+        CALL DRVSON_CLR_PRG             ;;
+
+	BTFSC T128M_F			;;
+        CALL DEBUG_PRG
+
 	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	CALL TMR2PRG			;;	
 	CALL TIMEACT_PRG		;;
@@ -4215,6 +4334,7 @@ CHK_U1RX_3:				;;
 	MOV W0,RX_LEN			;;
 	MOV [W1++],W0			;;
 	MOV W0,RX_CMD			;;
+        ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	MOV [W1++],W0			;;
 	MOV W0,RX_PARA0			;;
 	MOV [W1++],W0			;;
@@ -4223,6 +4343,31 @@ CHK_U1RX_3:				;;
 	MOV W0,RX_PARA2			;;
 	MOV [W1++],W0			;;
 	MOV W0,RX_PARA3			;;
+        MOVFF RX_PARA0,SYS_STATUS_0L    ;;
+        MOVFF RX_PARA1,SYS_STATUS_0H    ;;
+        MOVFF RX_PARA2,SYS_STATUS_1L    ;;
+        MOVFF RX_PARA3,SYS_STATUS_1H    ;;
+        ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	MOV [W1++],W0			;;
+	MOV W0,SYS_FLAG_0L    	        ;;
+	MOV [W1++],W0			;;
+	MOV W0,SYS_FLAG_0H    	        ;;
+	MOV [W1++],W0			;;
+	MOV W0,SYS_FLAG_1L    	        ;;
+	MOV [W1++],W0			;;
+	MOV W0,SYS_FLAG_1H    	        ;;
+        ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	MOV [W1++],W0			;;
+        PUSH W0                         ;;
+        AND #255,W0                     ;;
+        MOV W0,WG_FREQ_CH               ;;
+        POP W0                          ;;
+        SWAP W0                         ;;
+        AND #255,W0                     ;;
+        MOV W0,ATTENUATE                ;;
+        ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	MOV [W1++],W0			;;
+        MOV W0,IOOUT_FLAG               ;;
 	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	MOV RX_CMD,W0			;;	
 	SWAP W0				;;
@@ -4344,10 +4489,11 @@ RET_IO_SLOT:                            ;;
 	MOV W0,UTX_PARA2                ;;        
 	MOV #0x0000,W0                  ;;
 	MOV W0,UTX_PARA3                ;;
-        MOVLF #5,UTX_BUFFER_LEN         ;;        
+        MOVLF #6,UTX_BUFFER_LEN         ;;        
         MOV #ADI0BUF,W3                 ;;
 	BCF U1U2_F                      ;;
 	CALL UTX_STD                    ;;
+        RETURN
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -4703,6 +4849,13 @@ DECU2RX_1000J_1:
         MOV W0,[W3++]                    ;;
         DEC W2,W2
         BRA NZ,DECU2RX_1000J_1
+        MOV #DRVSON_CLR_TBUF0,W1        ;;        
+        MOV RX_SERIAL_ID,W0             ;;
+        ADD W0,W1,W1
+        ADD W0,W1,W1
+        CLR [W1]
+
+
         RETURN
 DECU2RX_1001J:				;;
 	RETURN				;;
