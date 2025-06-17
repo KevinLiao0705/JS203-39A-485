@@ -14,9 +14,9 @@
 ;BY DEFINE=============================
 ;	.EQU JS203_39A_F01_02	,1      ;sspa driver
 ;	.EQU JS203_39A_L01_02	,1      ;LA
-        .EQU JS203_39A_C01_04   ,1      ;FIBER
+;        .EQU JS203_39A_C01_04   ,1      ;FIBER
 ;       .EQU JS203_39A_K01_01   ,1     ;io
-;       .EQU JS203_39A_K01_02   ,1     ;io
+       .EQU JS203_39A_K01_02   ,1     ;io
 ;       .EQU JS203_39A_M01_01   ,1     ;RF
 ;
 ;	.EQU 	DEBUG_SLOT_ID_K	        ,0x0001
