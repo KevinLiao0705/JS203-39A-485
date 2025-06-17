@@ -12,11 +12,11 @@
         .include "p24ep64gp206.inc"
 
 ;BY DEFINE=============================
-;	.EQU JS203_39A_F01_02	,1      ;sspa driver
+	.EQU JS203_39A_F01_02	,1      ;sspa driver
 ;	.EQU JS203_39A_L01_02	,1      ;LA
 ;        .EQU JS203_39A_C01_04   ,1      ;FIBER
 ;       .EQU JS203_39A_K01_01   ,1     ;io
-       .EQU JS203_39A_K01_02   ,1     ;io
+;       .EQU JS203_39A_K01_02   ,1     ;io
 ;       .EQU JS203_39A_M01_01   ,1     ;RF
 ;
 ;	.EQU 	DEBUG_SLOT_ID_K	        ,0x0001
@@ -3829,9 +3829,9 @@ __U2RXInterrupt:			;;
 	;BTFSS U2RX_EN_F		;;
 	;BRA U2RXI_END			;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-        MOV #250,W0                     ;;
-        ADD TMR2,WREG                   ;;
-        MOV W0,U2TX_REPEAT_TIM          ;;
+        ;MOV #250,W0                     ;;
+        ;ADD TMR2,WREG                   ;;
+        ;MOV W0,U2TX_REPEAT_TIM          ;;
         ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	MOV #0xEA,W0			;;
 	CP W0,W1			;;
@@ -5455,7 +5455,7 @@ CHK_U2TX_END:
 	BCF U2TX_END_F
 	BCF RS485EX_DE_O
         BCF U2TXON_F                    ;;
-        MOV #250,W0                     ;;
+        MOV #500,W0                     ;;
         ADD TMR2,WREG                   ;;
         MOV W0,U2TX_REPEAT_TIM          ;;
 	RETURN
