@@ -12,12 +12,13 @@
         .include "p24ep64gp206.inc"
 
 ;BY DEFINE=============================
-	.EQU JS203_39A_F01_02	,1      ;sspa driver
+;	.EQU JS203_39A_F01_02	,1      ;SSPA DRIVER
 ;	.EQU JS203_39A_L01_02	,1      ;LA
-;        .EQU JS203_39A_C01_04   ,1      ;FIBER
-;       .EQU JS203_39A_K01_01   ,1     ;io
-;       .EQU JS203_39A_K01_02   ,1     ;io
-;       .EQU JS203_39A_M01_01   ,1     ;RF
+;       .EQU JS203_39A_C01_04  ,1      ;FIBER
+;       .EQU JS203_39A_K01_01   ,1      ;io
+;       .EQU JS203_39A_K01_02   ,1      ;io
+;       .EQU JS203_39A_M01_01   ,1      ;RF
+        .EQU JS203_39A_A01_03   ,1      ;IPC
 ;
 ;	.EQU 	DEBUG_SLOT_ID_K	        ,0x0001
 
@@ -3169,7 +3170,7 @@ MAIN_LOOP:				;;
 
 
 
-
+;LA
 .IFDEF JS203_39A_L01_02
 
 
@@ -3344,6 +3345,184 @@ MAIN_LOOP:				;;
 
 .ENDIF
 
+
+
+
+;@IPC
+.IFDEF JS203_39A_A01_03
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+INIT_IO:				;;
+        
+	;;PIN1 				;;
+	;;PIN2 				;;
+	;;PIN3 				;;
+	;;PIN4 				;;
+	;;PIN5 				;;
+        BSF SWS4_IO                     ;;
+	;;PIN6 				;;
+        BSF SWS5_IO                     ;;
+	;;PIN8 				;;
+        BSF SWS6_IO                     ;;
+	;;PIN11 			;;
+        BSF SWS7_IO                     ;;
+	;;PIN12 			;;
+	;;PIN13 			;;
+	BSF ADI_12V_IO			;;
+	;;PIN14 			;;
+	BSF ADI_5V_IO			;;
+	;;PIN15 			;;
+	;BSF ADS0_IO			;;
+	;;PIN16 			;;
+	;BSF ADS1_IO			;;
+	;;PIN21 			;;
+	;BSF TEST_LACH_0_IO		;;
+	;;PIN22 			;;
+	;BSF TEST_LACH_1_IO		;;
+	;;PIN23 			;;
+	;BSF TEST_LACH_2_IO		;;
+	;;PIN24 			;;
+	BCF IPC_SYS_RST_O               ;;
+	BCF IPC_SYS_RST_IO              ;;
+	;;PIN27 			;;
+	;BSF ADS2_IO			;;
+	;;PIN28 			;;
+	;BSF ADS3_IO			;;
+	;;PIN29 			;;
+	;;PIN30 			;;
+	;;PIN31 			;;
+	BCF TP1_O                       ;;
+	BCF TP1_IO                      ;;
+	;;PIN32 			;;
+	BCF TP2_O                       ;;
+	BCF TP2_IO                      ;;
+	;;PIN33 			;;
+	BCF TP3_O                       ;;
+	BCF TP3_IO                      ;;
+	;;PIN34 			;;
+	BCF TP4_O                       ;;
+	BCF TP4_IO                      ;;
+	;;PIN35 			;;
+	;BSF TEST_LACH_3_IO		;;
+	;;PIN36 			;;
+	;BSF TEST_LACH_4_IO		;;
+	;;PIN37 			;;
+	;BSF TEST_LACH_5_IO		;;
+	;;PIN39 			;;
+        BSF SLOTSW_S0_IO                ;;
+	;;PIN40 			;;
+        BSF SLOTSW_S1_IO                ;;
+	;;PIN42 			;;
+        BSF SLOTSW_S2_IO                ;;
+	;;PIN43 			;;
+        BSF SLOTSW_S3_IO                ;;
+	;;PIN44 			;;
+	;BCF LDLO_TR_O			;;
+	;BCF LDLO_TR_IO			;;
+	;;PIN45 			;;
+	;BCF LSEO_TR_O			;;
+	;BCF LSEO_TR_IO			;;
+	;;PIN46 			;;
+	;BCF LDFO_TR_O			;;
+	;BCF LDFO_TR_IO			;;
+	;;PIN47				;;
+	;BCF RS485EX_DE_O		;;
+	;BCF RS485EX_DE_IO		;;
+	;;PIN48 			;;
+	;BSF RS485EX_RO_IO		;;
+	;;PIN49 			;;
+	;BCF RS485EX_DI_O		;;
+	;BCF RS485EX_DI_IO		;;
+	;;PIN50 			;;
+	;BSF TEST_LACH_6_IO		;;
+	;;PIN51 			;;
+	;BSF TEST_LACH_7_IO		;;
+	;;PIN52 			;;
+	;BSF LSEI_CS_O			;;
+	;BCF LSEI_CS_IO			;;
+	;;PIN53 			;;
+	;BSF LDFI_CS_O			;;
+	;BCF LDFI_CS_IO			;;
+	;;PIN54 			;;
+	;BSF SEO_EN_N_O			;;
+	;BCF SEO_EN_N_IO		;;
+	;;PIN55 			;;
+	;BSF DFO_EN_N_O			;;
+	;BCF DFO_EN_N_IO		;;
+	;;PIN58 			;;
+	;BCF DFO_EN_P_O			;;
+	;BCF DFO_EN_P_IO		;;
+	;;PIN59 			;;
+	BCF RS485_DE_O		        ;;
+	BCF RS485_DE_IO		        ;;
+	;;PIN60 			;;
+	BSF RS485_RO_IO		        ;;
+	;;PIN61 			;;
+	BCF RS485_DI_O		        ;;
+	BCF RS485_DI_IO		        ;;
+        
+	;;PIN62 			;;
+	BSF LEDB_O                      ;;
+	BCF LEDB_IO                     ;;
+	;;PIN63 			;;
+	BSF LEDG_O                      ;;
+	BCF LEDG_IO                     ;;
+	;;PIN64 			;;
+	BSF LEDR_O                      ;;
+	BCF LEDR_IO                     ;;
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	BSET CNPUA,#CNPUA7              ;;        
+	BSET CNPUB,#CNPUB14             ;;        
+	BSET CNPUB,#CNPUB15             ;;        
+	BSET CNPUG,#CNPUG6              ;;        
+	BSET CNPUG,#CNPUG7              ;;        
+	BSET CNPUG,#CNPUG8              ;;        
+	BSET CNPUG,#CNPUG9              ;;        
+	BSET CNPUA,#CNPUA12             ;;  
+	BSET CNPUC,#CNPUC12             ;;        
+	BSET CNPUC,#CNPUC15             ;;        
+	BSET CNPUD,#CNPUD8              ;;        
+	BSET CNPUB,#CNPUB5              ;;        
+        ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+        CLR ANSELA                      ;;
+        CLR ANSELB                      ;;
+        CLR ANSELC                      ;;
+        CLR ANSELE                      ;;
+        MOVLF #1,MY_TYPE_ID             ;;
+	RETURN				;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+INIT_RAM:
+        RETURN
+
+
+
+;$2
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+MAIN:	                                ;;
+        CALL INIT_RAM   		;;
+        CALL INIT_SIO                   ;;
+	BSF U1RX_EN_F			;;
+        MOVLF #2,SLOT_STATUS            ;;
+        CLR SLOT_TEST_STATUS            ;;
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+MAIN_LOOP:				;;
+        CLRWDT                          ;;
+	BTFSC T128M_F			;;
+	TG TP1_O			;;
+	CLRWDT				;;
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	CALL TMR2PRG			;;	
+	CALL TIMEACT_PRG		;;
+	CALL CHK_U1RX			;;
+	;CALL DELAY_ACT_PRG             ;;
+        CALL CHK_U1TX_END               ;;
+        ;=================================
+	BRA MAIN_LOOP			;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+.ENDIF
 
 
 

@@ -299,6 +299,9 @@ DEBUG_CNT:		.SPACE 2
 
 U1RXI_BUF:		.SPACE 2		
 
+ADMIN_BUF:		.SPACE 2		
+
+
 ;;====================================
 TMP0:			.SPACE 2				
 TMP1:			.SPACE 2				
@@ -981,15 +984,15 @@ __INT1Interrupt:			;;
         CALL DLYUXI                     ;;                        
         BCLR AD1CON1,#SAMP              ;;    
         ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;    
-        MOV #50,W0                      ;;
-        CALL DLYUXI                     ;; 
-;       CLR ADWAIT_TIM                      
-;INT1_1:                                 ;;
-;       INC ADWAIT_TIM
-;       BTSC ADWAIT_TIM,#12
-;       BRA INT_END
-;	BTSS AD1CON1,#DONE		;;      
-;	BRA INT1_1   
+        ;MOV #50,W0                      ;;
+        ;CALL DLYUXI                     ;; 
+       CLR ADWAIT_TIM                      
+INT1_0:                                 ;;
+       INC ADWAIT_TIM
+       BTSC ADWAIT_TIM,#12
+       BRA INT_END
+       BTSS AD1CON1,#DONE		;;      
+	BRA INT1_0   
 INT1_1:                                 ;;
         INC RFAD_CNT                    ;;
         MOV RFAD_CNT,W0                 ;;
@@ -1217,6 +1220,7 @@ SUMAD_PRG_1:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 MAIN:					;;
 	BSF U1RX_EN_F			;;
+        MOVLF  #0X0FFF,ADMIN_BUF 
 	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 MAIN_LOOP:				;;
 	CLRWDT				;;
@@ -1230,8 +1234,8 @@ MAIN_LOOP:				;;
         CLR RFAD_DATA                   ;;
         BTFSC T128M_F                    ;;
         CALL SUMAD_PRG                  ;;
-
-
+        ;;CALL TEST_AD
+        
 
         ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	CALL TIMEACT_PRG		;;
@@ -1245,8 +1249,32 @@ MAIN_LOOP:				;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	
 	
+TEST_AD:
+        MOV #2,W0                       ;;        
+	MOV W0,AD1CHS0			;;TAD IN RC MODE IS 250 NS
+	BSET AD1CON1,#SAMP		;;MUST OVER 3 TIMES TAD
+        MOV #10,W0                       ;;
+        CALL DLYUXI                     ;;                        
+        BCLR AD1CON1,#SAMP              ;;    
+        ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;    
+        CLR ADWAIT_TIM                      
+TEST_AD_0:                                 ;;
+        INC ADWAIT_TIM
+        BTSC ADWAIT_TIM,#12
+        BRA TEST_AD_END
+        BTSS AD1CON1,#DONE		;;      
+	BRA TEST_AD_0   
+TEST_AD_1:                                 ;;
+	MOV ADC1BUF0,W0			;;
+        MOV W0,RFAD_BUF0                ;;        
+        INC ADMIN_BUF
+        MOV ADMIN_BUF,W0
+        CP RFAD_BUF0
+        BRA GEU,TEST_AD_END
+        MOVFF RFAD_BUF0,ADMIN_BUF
 
-
+TEST_AD_END:
+        RETURN
 	
 
 
