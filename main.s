@@ -12,18 +12,20 @@
         .include "p24ep64gp206.inc"
 
 ;BY DEFINE=============================
-;	.EQU JS203_39A_F01_02	,1      ;SSPA DRIVER
+	.EQU JS203_39A_F01_02	,1      ;SSPA DRIVER
 ;	.EQU JS203_39A_L01_02	,1      ;LA
-;       .EQU JS203_39A_C01_04  ,1      ;FIBER
+;       .EQU JS203_39A_C01_04  ,1       ;FIBER
 ;       .EQU JS203_39A_K01_01   ,1      ;io
 ;       .EQU JS203_39A_K01_02   ,1      ;io
 ;       .EQU JS203_39A_M01_01   ,1      ;RF
-        .EQU JS203_39A_A01_03   ,1      ;IPC
+;       .EQU JS203_39A_A01_03   ,1      ;IPC
 ;
 ;	.EQU 	DEBUG_SLOT_ID_K	        ,0x0001
+        .EQU NEW_DEVSON_DK       ,1
 
-;======================================
-;====================================
+;===================================
+
+;===================================
 	.EQU	VER0_K		,'1'
 	.EQU	VER1_K		,'0'
 
@@ -145,6 +147,40 @@
 	POP \YY
 .ENDM
 	
+
+.MACRO 	LTADR XX
+        PUSH W0
+        MOV #tbloffset(\XX),W0
+        MOV W0,TADR
+        POP W0
+.ENDM
+
+.MACRO 	WRFLD XX,YY
+        MOV #\XX,W0
+        MOV #\YY,W1
+        CALL WRFD8
+.ENDM
+
+.MACRO 	WRFWD XX
+        MOV #\XX,W1
+        CALL WRFD8
+.ENDM
+        
+.MACRO 	RRFDW XX
+        MOV #\XX,W1
+        CALL RRFD8
+.ENDM
+
+.MACRO 	WRFRD XX,YY
+        MOV \XX,W0
+        MOV #\YY,W1
+        CALL WRFD8
+.ENDM
+
+.MACRO 	WRFCMD XX
+        MOV #\XX,W0
+        CALL WRFTRIG
+.ENDM
 
 
 
@@ -271,6 +307,11 @@ DRVSON_CLR_TBUF0:       .SPACE 2
 DRVSON_CLR_TBUF1:       .SPACE 2        
 DRVSON_CLR_TBUF2:       .SPACE 2        
 DRVSON_CLR_TBUF3:       .SPACE 2        
+DRVSON_CLR_TBUF4:       .SPACE 2        
+DRVSON_CLR_TBUF5:       .SPACE 2        
+DRVSON_CLR_TBUF6:       .SPACE 2        
+DRVSON_CLR_TBUF7:       .SPACE 2        
+
 		
 ;;====================================
 FLAGA:	        	.SPACE 2
@@ -506,6 +547,41 @@ LOOP_ADR_END:           .SPACE 2
 ;BYTE6 CHKSUM2
 ;BYTE7 CHKSUM3
 
+;RF MODULE USE
+RFERR:                  .SPACE 2
+RADR:                   .SPACE 2
+TADR:                   .SPACE 2
+DADR:                   .SPACE 2
+DADR_ST:	        .SPACE 2		
+DADR_END:	        .SPACE 2		
+BTLIM:                  .SPACE 2
+BTCNT:                  .SPACE 2
+ANDDATA:                .SPACE 2                 
+IORDATA:                .SPACE 2                 
+MEM_RH:                 .SPACE 2
+MEM_RL:                 .SPACE 2
+
+
+TMP00:		        .SPACE 2		
+TMP01:		        .SPACE 2		
+TMP02:		        .SPACE 2		
+TMP03:		        .SPACE 2		
+TMP04:		        .SPACE 2		
+TMP05:		        .SPACE 2		
+TMP06:		        .SPACE 2		
+TMP07:		        .SPACE 2		
+TMP08:		        .SPACE 2		
+TMP09:		        .SPACE 2		
+TMP0A:		        .SPACE 2		
+TMP0B:		        .SPACE 2		
+TMP0C:		        .SPACE 2		
+TMP0D:		        .SPACE 2		
+TMP0E:		        .SPACE 2		
+TMP0F:		        .SPACE 2		
+
+RFA_CH:		        .SPACE 2		
+RFB_CH:		        .SPACE 2		
+
 
 END_REG:		.SPACE 2
 
@@ -692,12 +768,12 @@ sspaModuleTemprAA[2][36];   12BIT
 .EQU EMU_U2TX_F_P	,0
 .EQU EMU_DATA_F	        ,FLAGC
 .EQU EMU_DATA_F_P	,1
-;.EQU MCURX3_RXIN_F	,FLAGC
-;.EQU MCURX3_RXIN_F_P	,2
-;.EQU MCUTX4_START_F	,FLAGC
-;.EQU MCUTX4_START_F_P	,3
-;.EQU MCURX4_RXIN_F	,FLAGC
-;.EQU MCURX4_RXIN_F_P	,4
+.EQU ERROR_F    	,FLAGC
+.EQU ERROR_F_P	        ,2
+.EQU RFAB_F    	        ,FLAGC
+.EQU RFAB_F_P	        ,3
+.EQU RF_EN_F    	,FLAGC
+.EQU RF_EN_F_P	        ,4
 ;EQU RXIICCMD_F		,FLAGC
 ;EQU RXIICCMD_F_P	,5
 ;EQU MYMID_F		,FLAGC
@@ -3637,7 +3713,7 @@ INIT_IO:				;;
 	BCF RFMA_CS_IO			;;
 	;;PIN22 			;;
 	BSF RFMB_CS_O			;;
-	BCF RFMA_CS_IO			;;
+	BCF RFMB_CS_IO			;;
 	;;PIN23 			;;
 	BCF RFM_SCK_O			;;
 	BCF RFM_SCK_IO			;;
@@ -3890,7 +3966,13 @@ CHK_GPSRX_2:                            ;;
         RETURN                          ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;   
 
-;RF
+;@RF
+
+
+ERR_PRG:
+        MOVLF #3,SLOT_STATUS            ;;
+        BRA MAIN_LOOP
+        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 MAIN:	                                ;;
         CALL INIT_RAM   		;;
@@ -3900,6 +3982,22 @@ MAIN:	                                ;;
 	BSF U2RX_EN_F			;;
         MOVLF #2,SLOT_STATUS            ;;
         CLR SLOT_TEST_STATUS            ;;
+        ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+        BSF RF_EN_F                     ;;
+        MOVLF #80,RFA_CH                ;;        
+        MOVLF #80,RFB_CH                ;;
+        ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+        BCF RFAB_F                      ;;
+        CALL RF_INIT			;;
+        CP0 RFERR                       ;;
+        BRA NZ,ERR_PRG                  ;;
+        ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+        BSF RFAB_F                      ;;
+        CALL RF_INIT			;;
+        CP0 RFERR                       ;;
+        BRA NZ,ERR_PRG                  ;;
+        ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+        CALL SET_RF                     ;;
 	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 MAIN_LOOP:				;;
         CLRWDT                          ;;
@@ -3910,7 +4008,6 @@ MAIN_LOOP:				;;
 	CALL TMR2PRG			;;	
 	CALL TIMEACT_PRG		;;
 	CALL CHK_U1RX			;;
-	;CALL DELAY_ACT_PRG             ;;
         CALL CHK_U1TX_END               ;;
         ;=================================
         CALL CHK_GPSRX                  ;;
@@ -3919,11 +4016,1059 @@ MAIN_LOOP:				;;
 	BCLR U2STA,#OERR		;;
 	BTSC U1STA,#OERR		;;
 	BCLR U1STA,#OERR		;;
-        BRA MAIN_LOOP
-
-
+        BRA MAIN_LOOP                   ;;        
 	BRA MAIN_LOOP			;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+SET_RF:                                 ;;
+        BTFSS RF_EN_F                   ;;
+        BRA SET_RF                      ;;
+        BCF RFAB_F                      ;;      
+        WRFLD 0X60,MODECTR_REG          ;;      
+        MOV RFA_CH,W0                   ;;
+        CALL SET_RFCH                   ;;
+        WRFLD 0X82,CKO_REG              ;;
+        WRFCMD CMD_TX                   ;;
+        ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+        BSF RFAB_F                      ;;        
+        WRFLD 0X60,MODECTR_REG          ;;
+        MOV RFB_CH,W0                   ;;
+        CALL SET_RFCH                   ;;
+        WRFLD 0X82,CKO_REG              ;;
+        WRFCMD CMD_RX                   ;;
+        RETURN                          ;;
+SET_RF_1:                               ;;
+        BCF RFAB_F                      ;;      
+        WRFCMD CMD_STBY                 ;;
+        BSF RFAB_F                      ;;      
+        WRFCMD CMD_STBY                 ;;
+        RETURN                          ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;        
+        
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+TEST_RFTX:
+        WRFLD 0X60,MODECTR_REG
+        MOV #78,W0
+        CALL SET_RFCH
+        ;WRFLD 0XAA,CKO_REG
+        ;WRFLD 0X1D,GPIO1_REG
+        ;WRFLD 0X09,GPIO2_REG
+        ;BCF RF_GIO1_O
+        ;BCF RF_GIO1_IO
+        NOP
+        NOP
+        NOP
+        NOP
+        WRFCMD CMD_TX
+        MOV #20,W0
+        CALL DLYMX
+        NOP
+        NOP
+        NOP
+        WRFLD 0X82,CKO_REG
+        ;MOV #100,W0
+        ;CALL DLYMX
+        NOP
+        NOP
+        NOP
+        NOP
+        NOP
+        NOP
+        NOP
+        
+
+TEST_RFTX_0:
+        WRFCMD CMD_TX
+        NOP
+        NOP
+        NOP
+        NOP
+        MOV #1000,W0
+        CALL DLYMX
+        WRFCMD CMD_STBY
+        NOP
+        NOP
+        NOP
+        NOP
+        MOV #100,W0
+        CALL DLYMX
+        BRA TEST_RFTX_0
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+RF_INIT:                                ;;
+        CLR RFERR                       ;;
+        CALL RF_RESET                   ;;        
+        MOV #10,W0                      ;;
+        CALL DLYMX                      ;;
+        CALL A5133_TEST                 ;;
+        BTFSS ERROR_F                   ;;        
+        BRA $+8                         ;;
+        MOV #RF_TEST_ERR_K,W0           ;;
+        MOV W0,RFERR                    ;;
+        RETURN                          ;;
+        ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+        CALL RF_CONFIG                  ;;
+        CALL RF_TRIMMEDVALUE_INI        ;;
+        BTFSS ERROR_F                   ;;        
+        BRA $+8                         ;;
+        MOV #RF_TRIM_ERR_K,W0           ;;
+        MOV W0,RFERR                    ;;        
+        RETURN                          ;;
+        ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+        CALL RF_CAL                     ;;
+        BTFSS ERROR_F                   ;;
+        BRA $+8                         ;;
+        MOV #RF_CALI_ERR_K,W0           ;;
+        MOV W0,RFERR                    ;;
+        RETURN                          ;;
+        ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+        RETURN                          ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+RF_CONFIG:
+        LTADR A5133CFG_TBL
+        MOVLF #0X01,DADR_ST
+        MOVLF #0X04,DADR_END
+        CALL WRF_REGS
+        ;======================
+        LTADR A5133CFG_TBL
+        MOVLF #0X07,DADR_ST
+        MOVLF #0X1F,DADR_END
+        CALL WRF_REGS
+        ;======================
+        LTADR A5133CFG_20_TBL
+        MOVLF #0X20,DADR
+        MOVLF #13,BTLIM
+        CALL WRF_REGPAGE
+        ;======================
+        LTADR A5133CFG_21_TBL
+        MOVLF #0X21,DADR
+        MOVLF #13,BTLIM
+        CALL WRF_REGPAGE
+        ;======================
+        LTADR A5133CFG_22_TBL
+        MOVLF #0X22,DADR
+        MOVLF #6,BTLIM
+        CALL WRF_REGPAGE
+        ;======================
+        LTADR A5133CFG_TBL
+        MOVLF #0X23,DADR_ST
+        MOVLF #0X29,DADR_END
+        CALL WRF_REGS
+        ;======================
+        LTADR A5133CFG_2A_TBL
+        MOVLF #0X2A,DADR
+        MOVLF #13,BTLIM
+        CALL WRF_REGPAGE
+        ;======================
+        LTADR A5133CFG_TBL
+        MOVLF #0X2B,DADR_ST
+        MOVLF #0X35,DADR_END
+        CALL WRF_REGS
+        ;======================
+        LTADR A5133CFG_TBL
+        MOVLF #0X37,DADR_ST
+        MOVLF #0X37,DADR_END
+        CALL WRF_REGS
+        ;======================
+        LTADR A5133CFG_38_TBL
+        MOVLF #0X38,DADR
+        MOVLF #12,BTLIM
+        CALL WRF_REGPAGE
+        ;======================
+        LTADR A5133CFG_TBL
+        MOVLF #0X39,DADR_ST
+        MOVLF #0X3C,DADR_END
+        CALL WRF_REGS
+        ;======================
+        LTADR A5133CFG_TBL
+        MOVLF #0X3E,DADR_ST
+        MOVLF #0X3E,DADR_END
+        CALL WRF_REGS
+        ;======================
+        RETURN
+
+
+
+RF_TRIMMEDVALUE_INI:
+        BSF ERROR_F
+        LTADR A5133CFG_38_TBL
+        MOVLF #ROMP_REG,DADR
+        MOVLF #9,BTCNT
+        MOVLF #0XFF,ANDDATA
+        MOVLF #0XA0,IORDATA
+        CALL WRF_REGPAGE_ONE
+        ;;;;;;;;;;;;;;;;;;;;;;;;;
+        MOV #5,W0
+        CALL DLYMX
+        ;;;;;;;;;;;;;;;;;;;;;;;;;
+        MOVLF #USID_REG,DADR
+        MOVLF #TMP00,RADR
+        MOVLF #8,BTLIM
+        CALL RRF_TBL
+        ;;;;;;;;;;;;;;;;;;;;;;;;;
+        LTADR A5133CFG_38_TBL
+        MOVLF #ROMP_REG,DADR
+        MOVLF #9,BTCNT
+        MOVLF #0XFF,ANDDATA
+        MOVLF #0X00,IORDATA
+        CALL WRF_REGPAGE_ONE
+        ;;;;;;;;;;;;;;;;;;;;;;;;;
+        MOV TMP00,W0
+        ADD TMP01,WREG
+        AND #255,W0
+        CP TMP04
+        BRA NZ,RTI_1
+        CP0 TMP00
+        BRA Z,RTI_ERR
+        CP0 TMP01
+        BRA Z,RTI_ERR
+        ;;;;;;;;;;;;;;;;;;;;;;;;;;
+        LTADR A5133CFG_38_TBL
+        MOVLF #ROMP_REG,DADR
+        MOVLF #1,BTCNT
+        MOVLF #0XE0,ANDDATA
+        MOVFF TMP00,IORDATA
+        CALL WRF_REGPAGE_ONE
+        ;;;;;;;;;;;;;;;;;;;;;;;;;
+        LTADR A5133CFG_38_TBL
+        MOVLF #ROMP_REG,DADR
+        MOVLF #2,BTCNT
+        MOVLF #0XC0,ANDDATA
+        MOVFF TMP01,IORDATA
+        CALL WRF_REGPAGE_ONE
+        BCF ERROR_F
+        RETURN
+RTI_1:
+        MOV TMP00,W0
+        ADD TMP01,WREG
+        ADD TMP02,WREG
+        ADD TMP03,WREG
+        AND #255,W0
+        CP TMP04
+        BRA NZ,RTI_2
+        CP0 TMP00
+        BRA Z,RTI_ERR
+        CP0 TMP01
+        BRA Z,RTI_ERR
+        CP0 TMP02
+        BRA Z,RTI_ERR
+        CP0 TMP03
+        BRA Z,RTI_ERR
+        ;;;;;;;;;;;;;;;;;;;;;;;;;;
+        LTADR A5133CFG_38_TBL
+        MOVLF #ROMP_REG,DADR
+        MOVLF #1,BTCNT
+        MOVLF #0XE0,ANDDATA
+        MOVFF TMP00,IORDATA
+        CALL WRF_REGPAGE_ONE
+        ;;;;;;;;;;;;;;;;;;;;;;;;;
+        LTADR A5133CFG_38_TBL
+        MOVLF #ROMP_REG,DADR
+        MOVLF #2,BTCNT
+        MOVLF #0XC0,ANDDATA
+        MOVFF TMP01,IORDATA
+        CALL WRF_REGPAGE_ONE
+        ;;;;;;;;;;;;;;;;;;;;;;;;;
+        LTADR A5133CFG_38_TBL
+        MOVLF #ROMP_REG,DADR
+        MOVLF #0,BTCNT
+        MOVLF #0X03,ANDDATA
+        MOV TMP02,W0
+        SL W0,#2,W0
+        MOV W0,IORDATA
+        CALL WRF_REGPAGE_ONE
+        ;;;;;;;;;;;;;;;;;;;;;;;;;
+        LTADR A5133CFG_38_TBL
+        MOVLF #ROMP_REG,DADR
+        MOVLF #4,BTCNT
+        MOVLF #0X40,ANDDATA
+        MOVFF TMP03,IORDATA
+        CALL WRF_REGPAGE_ONE
+        ;;;;;;;;;;;;;;;;;;;;;;;;;
+        BCF ERROR_F
+        RETURN
+
+RTI_2:
+        CP0 TMP00
+        BRA Z,RTI_ERR
+        CP0 TMP01
+        BRA Z,RTI_ERR
+        CP0 TMP02
+        BRA Z,RTI_ERR
+        CP0 TMP03
+        BRA Z,RTI_ERR
+        CP0 TMP04
+        BRA Z,RTI_ERR
+        CP0 TMP06
+        BRA Z,RTI_ERR
+        ;;;;;;;;;;;;;;;;;;;;;;;;;;
+        LTADR A5133CFG_38_TBL
+        MOVLF #ROMP_REG,DADR
+        MOVLF #1,BTCNT
+        MOVLF #0XE0,ANDDATA
+        MOVFF TMP06,IORDATA
+        CALL WRF_REGPAGE_ONE
+        ;;;;;;;;;;;;;;;;;;;;;;;;;
+        LTADR A5133CFG_38_TBL
+        MOVLF #ROMP_REG,DADR
+        MOVLF #2,BTCNT
+        MOVLF #0XC0,ANDDATA
+        MOVFF TMP01,IORDATA
+        CALL WRF_REGPAGE_ONE
+        ;;;;;;;;;;;;;;;;;;;;;;;;;
+        LTADR A5133CFG_38_TBL
+        MOVLF #ROMP_REG,DADR
+        MOVLF #0,BTCNT
+        MOVLF #0X03,ANDDATA
+        MOV TMP02,W0
+        SL W0,#2,W0
+        MOV W0,IORDATA
+        CALL WRF_REGPAGE_ONE
+        ;;;;;;;;;;;;;;;;;;;;;;;;;
+        LTADR A5133CFG_38_TBL
+        MOVLF #ROMP_REG,DADR
+        MOVLF #4,BTCNT
+        MOVLF #0X40,ANDDATA
+        MOVFF TMP03,IORDATA
+        CALL WRF_REGPAGE_ONE
+        ;;;;;;;;;;;;;;;;;;;;;;;;;
+        BCF ERROR_F
+        RETURN
+RTI_ERR:
+        RETURN
+        
+RF_CAL_IF:
+        PUSH R0
+        BSF ERROR_F
+        WRFLD 0x3D,RXGAIN3_REG
+        CLR R0
+RCI_1:
+        INC R0
+        MOV #10,W0
+        CP R0
+        BRA LTU,$+4
+        RETURN        
+        NOP
+        NOP
+        NOP
+        MOV #0X23,W0
+        CALL RF_CAL_DATA
+        BTFSC ERROR_F
+        RETURN
+        NOP
+        NOP
+        NOP
+        NOP
+        RRFDW IFCAL1_REG
+        AND #15,W0
+        CP W0,#3
+        BRA LTU,RCI_1                
+        CP W0,#9
+        BRA GTU,RCI_1                
+
+        BCF ERROR_F
+        NOP
+        NOP
+        NOP
+        NOP
+        POP R0
+        RETURN
+
+        
+
+
+
+
+
+
+RF_CAL:
+        WRFCMD CMD_PLL
+        WRFLD 0X00,RFANALOG_REG
+        CALL RF_CAL_IF
+        BTFSC ERROR_F
+        RETURN
+        RRFDW IFCAL1_REG
+        NOP
+        NOP
+        NOP
+        NOP
+        RRFDW IFCAL1_REG
+        NOP
+        NOP
+        NOP
+        NOP
+        RRFDW IFCAL1_REG
+        NOP
+        NOP
+        NOP
+        NOP
+
+
+
+
+
+        ;MOV #0X23,W0
+        ;CALL RF_CAL_DATA
+        ;BTFSC ERROR_F
+        ;RETURN
+        NOP
+        NOP
+        NOP
+        NOP
+        MOV #20,W0
+        CALL RF_CAL_CHGP
+        BTFSC ERROR_F
+        RETURN
+        NOP
+        NOP
+        NOP
+        NOP
+        MOV #60,W0
+        CALL RF_CAL_CHGP
+        BTFSC ERROR_F
+        RETURN
+        NOP
+        NOP
+        NOP
+        NOP
+
+        MOV #100,W0
+        CALL RF_CAL_CHGP
+        BTFSC ERROR_F
+        RETURN
+
+        NOP     
+        NOP
+        NOP
+
+
+        
+        WRFCMD CMD_STBY
+        NOP     
+        NOP
+        NOP
+        MOV #100,W0
+        CALL DLYMX
+        NOP
+        NOP
+        RRFDW IFCAL1_REG
+        MOV W0,R0
+        NOP
+        NOP
+
+
+
+        RRFDW IFCAL2_REG
+        MOV W0,R1
+        RRFDW RXGAIN2_REG
+        MOV W0,MEM_RH
+        RRFDW RXGAIN3_REG
+        MOV W0,MEM_RL
+        NOP
+        NOP
+        NOP
+        NOP
+        BTSC R0,#4
+        BSF ERROR_F
+        NOP
+        NOP
+        NOP
+        NOP
+        RETURN
+
+
+
+
+
+
+
+;W0 CH
+RF_CAL_CHGP:
+        BSF ERROR_F
+        WRFWD PLL1_REG
+        MOV #0X1C,W0
+        CALL RF_CAL_DATA
+        BTFSC ERROR_F
+        RETURN
+        RRFDW VCOCCAL_REG
+        MOV W0,R0       ;VCB
+        RRFDW VCOCAL1_REG
+        MOV W0,R1       ;VB
+        RRFDW VCODEVCAL1_REG
+        MOV W0,R2       ;DEVA
+        RRFDW VCODEVCAL2_REG
+        MOV W0,R3       ;ADEV
+        BTSC R0,#4
+        RETURN
+        BTSC R1,#4
+        RETURN
+        BCF ERROR_F
+        NOP
+        NOP
+        NOP
+        NOP        
+        RETURN
+
+
+
+
+RF_CAL_DATA:
+        BSF ERROR_F
+        PUSH R0
+        PUSH R1
+        CLR R1
+        MOV W0,R0
+        WRFRD R0,CALIBRATION_REG
+RF_CAL_DATA_1:
+        CLRWDT
+        INC R1
+        BTSC R1,#12
+        RETURN
+        RRFDW CALIBRATION_REG
+        AND R0,WREG
+        CP0 W0
+        BRA NZ,RF_CAL_DATA_1
+        NOP
+        NOP
+        NOP
+        NOP
+        NOP
+        MOV #10,W0
+        CALL DLYMX
+
+        POP R1
+        POP R0
+        BCF ERROR_F       
+        RETURN
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+SET_RFPAGE:                             ;;
+        PUSH W0                         ;;
+        LOFFS1 A5133CFG_TBL             ;;        
+        MOV #RFANALOG_REG,W0            ;;
+        CALL TBLW                       ;;
+        POP W2                          ;;
+        SWAP.B W2                       ;;
+        IOR W2,W0,W0                    ;;        
+        MOV #RFANALOG_REG,W1            ;;        
+        CALL WRFD8                      ;;
+        RETURN                          ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+WRF_REGPAGE:                            ;;
+        CLR BTCNT                       ;;
+WRF_REGPAGE_1:                          ;;
+        MOV BTCNT,W0                    ;;
+        CALL SET_RFPAGE                 ;;
+        MOV TADR,W1                     ;;
+        MOV BTCNT,W0                    ;;
+        CALL TBLW                       ;;
+        MOV DADR,W1                     ;;
+        CALL WRFD8                      ;;
+        INC BTCNT                       ;;
+        MOV BTLIM,W0                    ;;
+        CP BTCNT                        ;;
+        BRA LTU,WRF_REGPAGE_1           ;;
+        RETURN                          ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+WRF_REGPAGE_ONE:                        ;;
+        MOV BTCNT,W0                    ;;        
+        CALL SET_RFPAGE                 ;;
+        MOV TADR,W1                     ;;
+        MOV BTCNT,W0                    ;;        
+        CALL TBLW                       ;;
+        AND ANDDATA,WREG                ;;
+        IOR IORDATA,WREG                ;;
+        MOV DADR,W1                     ;;
+        CALL WRFD8                      ;;
+        RETURN                          ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+        
+
+        
+
+
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+A5133_TEST:                             ;;
+        LTADR A5133CFG_ID_TBL           ;;
+        MOVLF #IDDATA_REG,DADR          ;;
+        MOVLF #8,BTLIM                  ;;
+        CALL WRF_TBL                    ;;
+        ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+        MOVLF #IDDATA_REG,DADR          ;;
+        MOVLF #TMP00,RADR               ;;
+        MOVLF #8,BTLIM                  ;;
+        CALL RRF_TBL                    ;;
+        LTADR A5133CFG_ID_TBL           ;;
+        MOVLF #TMP00,RADR               ;;        
+        MOVLF #8,BTLIM                  ;;
+        CALL CPR_TBL                    ;;
+        BTFSC ERROR_F                   ;;
+        NOP                             ;;      
+        NOP                             ;;
+        NOP                             ;;
+        RETURN                          ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;        
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+RF_RESET:                               ;;
+        WRFLD 0,RESET_REG               ;;
+        RETURN                          ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;5725+CH*1(MHZ)
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+SET_RFCH:                               ;;
+        WRFWD PLL1_REG                  ;;
+        RETURN                          ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;        
+
+
+;INPUT 
+;RADR
+;TADR
+;BTLIM        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+CPR_TBL:                                ;;
+        BSF ERROR_F                     ;;
+        CLR BTCNT                       ;;
+        ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+CPR_TBL_1:                              ;;
+        MOV TADR,W1                      ;;
+        MOV BTCNT,W0                    ;;
+        CALL TBLW                       ;;
+        ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+        MOV RADR,W1                     ;;
+        MOV BTCNT,W2                    ;;
+        SL W2,#1,W2                     ;;
+        ADD W2,W1,W1                    ;;
+        MOV [W1],W2                     ;;
+        CP W0,W2                        ;;
+        BRA Z,$+4                       ;;
+        RETURN                          ;;
+        ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+        INC BTCNT                       ;;
+        MOV BTLIM,W0                    ;;
+        CP BTCNT                        ;;
+        BRA LTU,CPR_TBL_1               ;;
+        BCF ERROR_F                     ;;
+        RETURN                          ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+
+
+        
+;INPUT 
+;TADR
+;DADR
+;BTLIM        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+WRF_TBL:                                ;;
+        CLR BTCNT                       ;;
+        ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+        CALL RFSPI_START                ;;
+        MOV DADR,W0                     ;;
+        CALL WSPI                       ;;
+        ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+WRF_TBL_1:                              ;;
+        MOV TADR,W1                     ;;
+        MOV BTCNT,W0                    ;;
+        CALL TBLW                       ;;
+        CALL WSPI                       ;;
+        ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+        INC BTCNT                       ;;
+        MOV BTLIM,W0                    ;;
+        CP BTCNT                        ;;
+        BRA LTU,WRF_TBL_1               ;;
+        CALL RFSPI_END                  ;;
+        RETURN                          ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+;INPUT 
+;RADR0  A5133 REG ADDRESS
+;RADR1  STORE TO REG
+;BTLIM        
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+RRF_TBL:                                ;;
+        CLR BTCNT                       ;;
+        ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+        CALL RFSPI_START                ;;
+        MOV DADR,W0                     ;;
+        BSET W0,#6
+        CALL WSPI                       ;;
+        ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+RRF_TBL_1:                              ;;
+        CALL RSPI                       ;;        
+        MOV RADR,W1                     ;;
+        MOV BTCNT,W2                    ;;
+        SL W2,#1,W2                     ;;
+        ADD W2,W1,W1                    ;;
+        MOV W0,[W1]                     ;;
+        ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+        INC BTCNT                       ;;
+        MOV BTLIM,W0                    ;;
+        CP BTCNT                        ;;
+        BRA LTU,RRF_TBL_1               ;;
+        CALL RFSPI_END                  ;;
+        RETURN                          ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+
+;INPUT 
+;TADR
+;DADR_ST
+;DADR1
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;       
+WRF_REGS:                               ;;
+        MOV TADR,W1                     ;;
+        MOV DADR_ST,W0                  ;;
+        CALL TBLW                       ;;
+        MOV DADR_ST,W1                  ;;
+        CALL WRFD8                      ;;
+        INC DADR_ST                     ;;
+        MOV DADR_END,W0                 ;;
+        CP DADR_ST                      ;;
+        BRA LEU,WRF_REGS                ;;
+        RETURN                          ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+
+
+
+        
+
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;       
+NOPSPI:                                 ;;
+        NOP                             ;;
+        NOP                             ;;
+        NOP                             ;;
+        NOP                             ;;
+        RETURN                          ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;       
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;       
+WSPI:                                   ;;
+        PUSH W2                         ;;
+        BCF RFM_SDIO_IO                 ;;
+        CALL NOPSPI                     ;;
+        MOV #8,W2                       ;;
+WSPI_1:                                 ;;
+        BCF RFM_SCK_O                   ;;
+        BTSS W0,#7                      ;;
+        BCF RFM_SDIO_O                  ;;
+        BTSC W0,#7                      ;;
+        BSF RFM_SDIO_O                  ;;
+        CALL NOPSPI                     ;;
+        BSF RFM_SCK_O                   ;;
+        CALL NOPSPI                     ;;
+        SL W0,W0                        ;;
+        DEC W2,W2                       ;;
+        BRA NZ,WSPI_1                   ;;
+        POP W2                          ;;
+        RETURN                          ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+RSPI:                                   ;;
+        PUSH W2                         ;;
+        BSF RFM_SDIO_IO                 ;;
+        CALL NOPSPI                     ;;
+        MOV #0,W0                       ;;
+        MOV #8,W2                       ;;
+RSPI_1:                                 ;;
+        BCF RFM_SCK_O                   ;;
+        CALL NOPSPI                     ;;
+        SL W0,#1,W0                     ;;
+        BSET W0,#0                      ;;
+        BTFSS RFM_SDIO_I                ;;        
+        BCLR W0,#0                      ;;
+        BSF RFM_SCK_O                   ;;
+        CALL NOPSPI                     ;;
+        DEC W2,W2                       ;;
+        BRA NZ,RSPI_1                   ;;
+        POP W2                          ;;
+        RETURN                          ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;        
+
+
+      
+;W1 ADDR
+;W0 DATA
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;       
+WRFD8:                                  ;;
+        CALL RFSPI_START                ;;
+        PUSH W0                         ;;
+        MOV W1,W0                       ;;
+        CALL WSPI                       ;;
+        POP W0                          ;;
+        CALL WSPI                       ;;
+        CALL RFSPI_END                  ;;
+        RETURN                          ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+;W0 DATA
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+WRFTRIG:                                ;;
+        CALL RFSPI_START                ;;        
+        CALL WSPI                       ;;
+        CALL RFSPI_END                  ;;
+        RETURN                          ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+
+;W1:ADDR
+;OUT: W0:DATA
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+RRFD8:                                  ;;      
+        CALL RFSPI_START                ;;
+        MOV W1,W0                       ;;
+        BSET W0,#6                      ;;
+        CALL WSPI                       ;;
+        CALL RSPI                       ;;
+        CALL RFSPI_END                  ;;
+        RETURN                          ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;        
+RFSPI_START:                            ;;
+        BCF RFM_SCK_O                   ;;
+        BTFSS RFAB_F                    ;;
+        BCF RFMA_CS_O                   ;;
+        BTFSC RFAB_F                    ;;
+        BCF RFMB_CS_O                   ;;
+        CLRWDT                          ;;
+        RETURN                          ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+RFSPI_END:                              ;;
+        BCF RFM_SCK_O                   ;;      
+        BSF RFMA_CS_O                   ;;
+        BSF RFMB_CS_O                   ;;
+        RETURN                          ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+TBLW:                                   ;;
+        SL W0,#1,W0                     ;;
+        ADD W0,W1,W1                    ;;                
+      	TBLRDL [W1++],W0                ;;
+        RETURN                          ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+        
+
+
+	
+
+
+
+
+
+
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+A5133CFG_TBL:				
+	.WORD 0x00;0X00, //RESET register,		Only reset, not use on config
+	.WORD 0x62;0X01, //MODE register,
+	.WORD 0x00;0X02, //CALIBRATION register,
+	.WORD 0x3F;0X03, //FIFO1 register,
+	.WORD 0x00;0X04, //FIFO2 register,
+	.WORD 0x00;0X05, //FIFO DATAr,			for fifo read/write
+	.WORD 0x00;0X06, //IDDATA register,		for idcode
+	.WORD 0x00;0X07, //RCOSC1 register,
+	.WORD 0x00;0X08, //RCOSC2 register,
+	.WORD 0x0C;0X09, //RCOSC3 register,
+	.WORD 0x82;0X0A, //CKO register,
+	.WORD 0x21;0X0B, //GPIO1 register RXD kevin
+	.WORD 0x24;0X0C, //GPIO2 register,TXD kevin
+	.WORD 0x1F;0X0D, //DATARATECLOCK register,
+	.WORD 0x00;0X0E, //PLL1 register,//RF BASE 5725M+THIS*1M
+	.WORD 0x1E;0X0F, //PLL2 register,       
+        ;==================================================
+	.WORD 0x59;0X10, //PLL3 register,DIRECT MODE kevin
+	.WORD 0x74;0X11, //PLL4 register,
+	.WORD 0x01;0X12, //PLL5 register,DIRECT MODE kevin
+	.WORD 0x28;0X13, //ChannelGroup1 register,
+	.WORD 0x50;0X14, //ChannelGroup2 register,
+	.WORD 0x2D;0X15, //TX1 register,FIFO MODE
+	.WORD 0x40;0X16, //TX2 register,
+	.WORD 0x1B;0X17, //DELAY1 register,
+	.WORD 0x40;0X18, //DELAY2 register,
+	.WORD 0x70;0X19, //RX register,
+	.WORD 0x7B;0X1A, //RXGAIN1 register,
+	.WORD 0xC0;0X1B, //RXGAIN2 register,
+	.WORD 0x3C;0X1C, //RXGAIN3 register,
+	.WORD 0xCA;0X1D, //RXGAIN4 register,
+	.WORD 0x00;0X1E, //RSSI register,
+	.WORD 0xC1;0X1F, //ADC register,
+        ;=============================================
+	.WORD 0x00;0X20, //CODE1 register,reference
+	.WORD 0x00;0X21, //CODE2 register,
+	.WORD 0x00;0X22, //CODE3 register,
+	.WORD 0xE4;0X23, //IFCAL1 register,//KFVIN CHECK 0X60
+	.WORD 0x01;0X24, //IFCAL2 register,
+	.WORD 0x4F;0X25, //VCOCCAL register,
+	.WORD 0xC0;0X26, //VCOCAL1 register,
+	.WORD 0x80;0X27, //VCOCAL2 register,
+	.WORD 0x30;0X28, //VCO deviation 1 register,
+	.WORD 0x40;0X29, //VCO deviation 2 register,
+	.WORD 0x00;0X2A, //DAS register,
+	.WORD 0xFF;0X2B, //VCO Modulation delay register,
+	.WORD 0x40;0X2C, //BATTERY register,
+	.WORD 0xA7;0X2D, //TXTEST register,
+	.WORD 0x57;0X2E, //RXDEM1 register,
+	.WORD 0x74;0X2F, //RXDEM2 register,
+        ;=============================================
+	.WORD 0xF3;0X30, //CPC1 register,
+	.WORD 0x33;0X31, //CPC2 register,
+	.WORD 0x4D;0X32, //CRYSTAL register,
+	.WORD 0x15;0X33, //PLLTEST register,
+	.WORD 0x0F;0X34, //VCOTEST register,
+	.WORD 0x00;0X35, //RF Analog register,
+	.WORD 0x00;0X36, //Key data register,
+	.WORD 0x33;0X37, //Channel select register,
+	.WORD 0x00;0X38, //ROM register,
+	.WORD 0x00;0X39, //DataRate register,
+	.WORD 0x00;0X3A, //FCR register,
+	.WORD 0x00;0X3B, //ARD register,
+	.WORD 0x00;0X3C, //AFEP register,
+	.WORD 0x00;0X3D, //FCB register,
+	.WORD 0x00;0X3E, //KEYC register,
+	.WORD 0x00;0X3F, //USID register,
+	;===================================
+
+
+A5133CFG_ID_TBL:
+	.WORD 0x01
+	.WORD 0x23
+	.WORD 0x45
+	.WORD 0x67
+	.WORD 0x89
+	.WORD 0xAB
+	.WORD 0xCD
+	.WORD 0xEF
+
+
+A5133CFG_20_TBL:
+	.WORD 0x0E      ;page0,
+	.WORD 0x00      ;page1,
+	.WORD 0x00      ;Page2,
+	.WORD 0x00      ;page3,
+	.WORD 0x00      ;page4,
+	.WORD 0x00      ;page5,
+	.WORD 0x00      ;page6,
+	.WORD 0x00      ;page7,
+	.WORD 0x00      ;page8,
+	.WORD 0x00      ;page9,
+	.WORD 0x02      ;page10,
+	.WORD 0x00      ;page11,
+	.WORD 0x00      ;page12,
+
+A5133CFG_21_TBL:
+	.WORD 0x09      ;page0,
+	.WORD 0x00      ;page1,
+	.WORD 0x00      ;Page2,
+	.WORD 0x00      ;page3,
+	.WORD 0x00      ;page4,
+	.WORD 0x00      ;page5,
+	.WORD 0xE0      ;page6,
+	.WORD 0x00      ;page7,
+	.WORD 0x2C      ;page8,
+	.WORD 0x4F      ;page9,
+	.WORD 0x01      ;page10,
+	.WORD 0x42      ;page11,
+	.WORD 0x56      ;page12,
+
+A5133CFG_22_TBL:
+	.WORD 0x00      ;page0,
+	.WORD 0x10      ;page1,//0X10
+	.WORD 0x00      ;Page2,
+	.WORD 0x10      ;page3,
+	.WORD 0x00      ;page4,
+	.WORD 0x04      ;page5,
+
+
+
+A5133CFG_2A_TBL:
+	.WORD 0x00      ;page0,
+	.WORD 0x01      ;page1,
+	.WORD 0xF0      ;Page2,
+	.WORD 0x80      ;page3,
+	.WORD 0x80      ;page4,
+	.WORD 0x48      ;page5,
+	.WORD 0x03      ;page6,
+	.WORD 0xC0      ;page7,
+	.WORD 0x3A      ;page8,
+	.WORD 0x3E      ;page9,
+	.WORD 0xE8      ;page10,
+	.WORD 0x80      ;page11,
+	.WORD 0x00      ;page12,
+
+
+A5133CFG_38_TBL:
+	.WORD 0x80      ;page0,
+	.WORD 0x50      ;page1,
+	.WORD 0x20      ;Page2,
+	.WORD 0x64      ;page3,
+	.WORD 0x20      ;page4,
+	.WORD 0x40      ;page5,
+	.WORD 0x60      ;page6,
+	.WORD 0x04      ;page7,
+	.WORD 0x00      ;page8,
+	.WORD 0x00      ;page9,
+	.WORD 0x00      ;page10,
+	.WORD 0x00      ;page11,
+
+
+
+
+	
+
 
 
 .ENDIF
@@ -4270,14 +5415,91 @@ INIT_RAM:
         CLR [W1++]
         RETURN
 
-DRVSON_CLR_PRG:
+        ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	BSET PS_FLAG,#0 		;;PSSON CONNECTED
+        BCLR PS_FLAG,#1                 ;;FAUALT_F
+	BCLR PS_FLAG,#2			;;P50VEN_F
+	BCLR PS_FLAG,#3			;;P32VEN_F
+	BCLR PS_FLAG,#4			;;PS_ON_F
+
+.IFDEF NEW_DEVSON_DK
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+DRVSON_CLR_PRG:                         ;;
+        INC DRVSON_CLR_TBUF0            ;;
+        INC DRVSON_CLR_TBUF1            ;;        
+        INC DRVSON_CLR_TBUF2            ;;
+        INC DRVSON_CLR_TBUF3            ;;
+        INC DRVSON_CLR_TBUF4            ;;
+        INC DRVSON_CLR_TBUF5            ;;        
+        INC DRVSON_CLR_TBUF6            ;;
+        INC DRVSON_CLR_TBUF7            ;;
+        ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+        MOV #SLOTINF_BUF+14,W1          ;;
+        MOV #16,W0                      ;;
+        CP DRVSON_CLR_TBUF0             ;;                    
+        BRA LTU,$+4                     ;;        
+        BCLR [W1],#0                        ;;
+        ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;        
+        MOV #20,W0                      ;;
+        ADD W0,W1,W1                    ;;
+        MOV #16,W0                      ;;
+        CP DRVSON_CLR_TBUF1             ;;        
+        BRA LTU,$+4                     ;;
+        BCLR [W1],#0                        ;;
+        ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+        MOV #20,W0                      ;;        
+        ADD W0,W1,W1                    ;;
+        MOV #16,W0                      ;;
+        CP DRVSON_CLR_TBUF2             ;;         
+        BRA LTU,$+4                     ;;
+        BCLR [W1],#0                        ;;
+        ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;        
+        MOV #20,W0                      ;;
+        ADD W0,W1,W1                    ;;
+        MOV #16,W0                      ;;
+        CP DRVSON_CLR_TBUF3             ;;
+        BRA LTU,$+4                     ;;
+        BCLR [W1],#0                        ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
         MOV #SLOTINF_BUF,W1             ;;
-        INC DRVSON_CLR_TBUF0        
-        INC DRVSON_CLR_TBUF1        
-        INC DRVSON_CLR_TBUF2        
-        INC DRVSON_CLR_TBUF3
-        MOV #10,W0
-        CP DRVSON_CLR_TBUF0        
+        MOV #16,W0                      ;;
+        CP DRVSON_CLR_TBUF4             ;;                    
+        BRA LTU,$+4                     ;;        
+        CLR [W1]                        ;;
+        ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;        
+        MOV #20,W0                      ;;
+        ADD W0,W1,W1                    ;;
+        MOV #16,W0                      ;;
+        CP DRVSON_CLR_TBUF5             ;;        
+        BRA LTU,$+4                     ;;
+        CLR [W1]                        ;;
+        ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+        MOV #20,W0                      ;;        
+        ADD W0,W1,W1                    ;;
+        MOV #16,W0                      ;;
+        CP DRVSON_CLR_TBUF6             ;;         
+        BRA LTU,$+4                     ;;
+        CLR [W1]                        ;;
+        ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;        
+        MOV #20,W0                      ;;
+        ADD W0,W1,W1                    ;;
+        MOV #16,W0                      ;;
+        CP DRVSON_CLR_TBUF7             ;;
+        BRA LTU,$+4                     ;;
+        CLR [W1]                        ;;
+        ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+        RETURN
+.ELSE
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+DRVSON_CLR_PRG:                         ;;
+        MOV #SLOTINF_BUF,W1             ;;
+        INC DRVSON_CLR_TBUF0            ;;
+        INC DRVSON_CLR_TBUF1            ;;        
+        INC DRVSON_CLR_TBUF2            ;;
+        INC DRVSON_CLR_TBUF3            ;;
+        ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+        MOV #10,W0                      ;;
+        CP DRVSON_CLR_TBUF0                     
         BRA LTU,$+4
         BCLR [W1],#0       
         MOV #20,W0
@@ -4299,7 +5521,7 @@ DRVSON_CLR_PRG:
         BRA LTU,$+4
         BCLR [W1],#0                
         RETURN
-
+.ENDIF
 
 DEBUG_PRG:
         INC DEBUG_CNT
@@ -4392,7 +5614,11 @@ U2TX_PRG_1:                              ;;
 	CALL UTX_STD                    ;;
         ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
         INC SON_SERIAL_ID               ;;
+.IFDEF NEW_DEVSON_DK                    ;;
+        MOV #9,W0                       ;;
+.ELSE                                   ;;
         MOV #5,W0                       ;;
+.ENDIF                                  ;;
         CP SON_SERIAL_ID                ;;
         BRA GEU,$+4                     ;;
         RETURN                          ;;
@@ -4972,7 +6198,11 @@ CHK_U2RX_1:				;;
 	BRA Z,$+4			;;
 	RETURN				;;
 	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+.IFDEF NEW_DEVSON_DK                    ;;
+        MOV #8,W0                       ;;
+.ELSE                                   ;;
         MOV #4,W0                       ;;
+.ENDIF                                  ;;
         CP RX_SERIAL_ID	        	;;
         BRA LTU,$+4                     ;;
         RETURN                          ;;
@@ -5016,26 +6246,78 @@ DECU2RX_10XX:				;;
 	BRA DECU2RX_1000J		;;BROADCAST ALL SLOT INF AND GET SLOT_INF 
 	BRA DECU2RX_1001J		;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;	
-;%2					;;
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+/*                                      ;;
+	MOV PS_FLAG,W0			;;
+	MOV V50VADI,W0			;;
+	MOV I50VADI,W0			;;
+	MOV T50VADI,W0			;;
+	MOV V32VADI,W0			;;
+	MOV I32VADI,W0			;;
+	MOV T32VADI,W0			;;
+        ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	MOV SSPA_FLAG,W0		;;
+	MOV SSPA_RFOP,W0		;;
+	MOV SSPA_TEMP,W0		;;
+*/                                      ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+.IFDEF NEW_DEVSON_DK
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+DECU2RX_1000J:				;;
+        MOVFF RX_SERIAL_ID,R0           ;;        
+        BCLR R0,#2                      ;;
+        MOV #20,W0                      ;;
+        MUL R0                          ;;                      
+        ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; 
+        MOV #SLOTINF_BUF,W3             ;;
+        ADD W2,W3,W3                    ;;
+        BTSS RX_SERIAL_ID,#2            ;;
+        ADD #14,W3                      ;;
+        BTSS RX_SERIAL_ID,#2            ;;
+        ADD #14,W1                      ;;
+        MOV #7,W2                       ;;
+        BTSS RX_SERIAL_ID,#2            ;;       
+        MOV #3,W2                       ;;
+        ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+DECU2RX_1000J_1:                        ;;
+	MOV [W1++],W0			;;
+        MOV W0,[W3++]                   ;;
+        DEC W2,W2                       ;;
+        BRA NZ,DECU2RX_1000J_1          ;;
+        MOV #DRVSON_CLR_TBUF0,W1        ;;        
+        MOV RX_SERIAL_ID,W0             ;;
+        ADD W0,W1,W1                    ;;
+        ADD W0,W1,W1                    ;;
+        CLR [W1]                        ;;
+        RETURN                          ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+.ELSE
+;%2					
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 DECU2RX_1000J:				;;
         MOV #20,W0                      ;;
         MUL RX_SERIAL_ID                ;;                      
+        ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
         MOV #SLOTINF_BUF,W3             ;;
         ADD W2,W3,W3                    ;;
-        MOV #10,W2
-DECU2RX_1000J_1:
+        MOV #10,W2                      ;;
+DECU2RX_1000J_1:                        ;;
 	MOV [W1++],W0			;;
-        MOV W0,[W3++]                    ;;
-        DEC W2,W2
-        BRA NZ,DECU2RX_1000J_1
+        MOV W0,[W3++]                   ;;
+        DEC W2,W2                       ;;
+        BRA NZ,DECU2RX_1000J_1          ;;
         MOV #DRVSON_CLR_TBUF0,W1        ;;        
         MOV RX_SERIAL_ID,W0             ;;
-        ADD W0,W1,W1
-        ADD W0,W1,W1
-        CLR [W1]
-
-
-        RETURN
+        ADD W0,W1,W1                    ;;
+        ADD W0,W1,W1                    ;;
+        CLR [W1]                        ;;
+        RETURN                          ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+.ENDIF
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 DECU2RX_1001J:				;;
 	RETURN				;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

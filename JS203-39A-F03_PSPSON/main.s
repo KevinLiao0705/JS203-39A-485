@@ -12,12 +12,7 @@
         .include "p24ep64MC202.inc"
 
 ;BY DEFINE=============================
-	.EQU OLED_AMT_K		,92
-	.EQU	SLAVE_DK	,1	
-	.EQU	DATEST_DK	,1	
-;	.EQU	U2TX_TEST_DK	,1	
-;	.EQU 	IICM_DK		,1
-;	.EQU 	IICS_DK		,1
+;	.EQU	TEST_EN_DK	,1	
 ;====================================
 	.EQU	VER0_K		,'1'
 	.EQU	VER1_K		,'0'
@@ -296,6 +291,9 @@ R7:			.SPACE 2
 R8:			.SPACE 2		
 R9:			.SPACE 2		
 DEBUG_CNT:		.SPACE 2		
+NO_U2RX_TIM:		.SPACE 2		
+LED_TIM:		.SPACE 2		
+
 
 U1RXI_BUF:		.SPACE 2		
 
@@ -756,8 +754,8 @@ END_REG:		.SPACE 2
 ;.EQU ERR_F_P		,10
 .EQU YES_F		,FLAGA
 .EQU YES_F_P		,11
-;EQU AICIO_AB_F		,FLAGA
-;EQU AICIO_AB_F_P  	,12
+.EQU U2RX_CON_F		,FLAGA
+.EQU U2RX_CON_F_P  	,12
 ;.EQU MASTER_U1RX_F	,FLAGA
 ;.EQU MASTER_U1RX_F_P 	,13
 ;.EQU MASTER_U2RX_F	,FLAGA
@@ -957,7 +955,7 @@ WAIT_POWER:			;;
 	CALL INIT_TIMER2	;;
 	CALL INIT_TIMER3	;;
 	;CALL TEST_TIMER	;;
-	CALL INIT_UART1		;;
+	;CALL INIT_UART1	;;
 	CALL INIT_UART2		;;
 	;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1118,6 +1116,14 @@ PS_ONOFF_PRG:                           ;;
         RETURN                          ;;
         BTFSS PS_ON_F                   ;;                
         BRA PS_OFF_PRG                  ;;
+        ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+        BTFSC U2RX_CON_F                ;;
+        BRA PS_ON_PRG                   ;;
+        ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;        
+        BCF PS_ON_F                     ;;
+        MOV #250,W0                     ;;
+        MOV W0,V50OFF_TIM                ;;
+        BRA PS_OFF_PRG
 PS_ON_PRG:                              ;;
 	BSF P50VEN_F                    ;;
         CP0 V32ON_TIM                   ;;
@@ -1153,7 +1159,10 @@ TTYY:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 PS_FAULT_PRG:        	                ;;
 	BCLR PS_FLAG,#1 		;;
-	BTFSS PS_FAULT_I                ;;
+	BTFSC PS50V_FAULT_I             ;;
+        BRA PFP_H                       ;;
+	BTFSC PS32V_FAULT_I             ;;
+        BRA PFP_H                       ;;
         BRA PFP_L                       ;;
         ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 PFP_H:                                  ;;
@@ -1170,16 +1179,52 @@ PFP_L:                                  ;;
         RETURN                          ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+
+TEST_PRG:
+        BTFSS T128M_F
+        RETURN
+        TG P32VEN_F
+        TG P50VEN_F
+        RETURN
+LED_PRG:
+	BTFSS T64M_F			;;
+        RETURN
+        INC LED_TIM
+        BTFSS U2RX_CON_F
+        BRA LED_P1
+        BTSS LED_TIM,#1
+        BSF LED_O                      ;;
+        BTSC LED_TIM,#1
+        BCF LED_O                      ;;
+        RETURN
+LED_P1:
+        BTSS LED_TIM,#3
+        BSF LED_O                      ;;
+        BTSC LED_TIM,#3
+        BCF LED_O                      ;;
+        RETURN
+        
+
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 MAIN:					;;
 	BSF U1RX_EN_F			;;
 	BSF U2RX_EN_F			;;
+        ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+        ;BSF PS_ON_F             
+        ;MOV #250,W0;
+        ;MOV W0,V32ON_TIM        
+        ;BSF U2RX_CON_F
 	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 MAIN_LOOP:				;;
 	CLRWDT				;;
-	BTFSC T128M_F			;;
-	TG LED_O
+        CALL LED_PRG                    ;;
+        .IFDEF TEST_EN_DK               ;;
+        CALL TEST_PRG                   ;;
+        .ELSE
 	CALL PS_ONOFF_PRG		;;
+        .ENDIF                          ;;
+        
         ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	BSET PS_FLAG,#0 		;;
         ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1206,18 +1251,11 @@ MAIN_LOOP:				;;
 	BTFSS P32VEN_F                  ;;
 	BCF P32V_EN_O                   ;;
         ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-        BTFSS SSPA_ON_F                 ;;
-        BCF SSPA_EN_O                   ;;
-        BTFSC SSPA_ON_F                 ;;
-        BSF SSPA_EN_O                   ;;
-	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	CALL CONVERT_AD			;;
 	CALL TMR2PRG			;;	
 	CALL TMR3PRG			;;	
 	CALL CONVERT_AD			;;
 	CALL TIMEACT_PRG		;;
-	CALL CONVERT_AD			;;
-	CALL CHK_U1RX			;;
 	CALL CONVERT_AD			;;
 	CALL CHK_U2RX			;;
 	CALL CONVERT_AD			;;
@@ -1315,6 +1353,12 @@ TMR3PRG:				;;
 TIMEACT_PRG:				;;
 	BTFSS T4M_F			;;
 	RETURN				;;
+        INC NO_U2RX_TIM                 ;;
+        MOV #250,W0                     ;;        
+        CP NO_U2RX_TIM                  ;;
+        BRA LTU,$+4                     ;;
+        BCF U2RX_CON_F                   ;;
+        ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	INC SHIFT_TIME
 	MOV #8,W0
 	CP SHIFT_TIME
@@ -1434,15 +1478,15 @@ INIT_SIO:			;;
 	MOV.B W3,[W1]		;;
 	BCLR OSCCON,#6		;;
 	;;;;;;;;;;;;;;;;;;;;;;;;;;
-	MOV #0xFF00,W0		;;
-	AND RPINR18		;;
-	MOV #36,W0		;;RP36 U1RX
-	IOR RPINR18		;;
+	;MOV #0xFF00,W0		;;
+	;AND RPINR18		;;
+	;MOV #36,W0		;;RP36 U1RX
+	;IOR RPINR18		;;
 	;;;;;;;;;;;;;;;;;;;;;;;;;;
-	MOV #0xFF00,W0		;;
-	AND RPOR0		;;
-	MOV #0x0001,W0		;;RP20 U1TX
-	IOR RPOR0		;;
+	;MOV #0xFF00,W0		;;
+	;AND RPOR0		;;
+	;MOV #0x0001,W0		;;RP20 U1TX
+	;IOR RPOR0		;;
 	;;;;;;;;;;;;;;;;;;;;;;;;;;
 	MOV #0xFF00,W0		;;
 	AND RPINR19		;;
@@ -1722,17 +1766,17 @@ INIT_IO:				;;
 	;;PIN7 				;;
 	BSF ADDR_A1_IO			;;
 	;;PIN8	 			;;
-	BSF RS422_RX_IO			;;
+	;BSF RS422_RX_IO		;;
 	;;PIN9	 			;;
-	BCF RS422_TX_O			;;
-	BSF RS422_TX_IO			;;
+	;BCF RS422_TX_O			;;
+	;BSF RS422_TX_IO		;;
 	;;PIN11	 			;;PGD
 	;;PIN12	 			;;PGC
 	;;PIN13	 			;;
 	BCF P50V_EN_O	        	;;
 	BCF P50V_EN_IO	        	;;
 	;;PIN14 			;;
-	BSF PS_FAULT_IO 		;;
+	BSF PS50V_FAULT_IO 		;;
 	;;PIN15 			;;
 	BCF RS485_DE_O			;;
 	BCF RS485_DE_IO			;;
@@ -1745,11 +1789,12 @@ INIT_IO:				;;
 	BCF P32V_EN_O	        	;;
 	BCF P32V_EN_IO	        	;;
 	;;PIN21 			;;
-	BCF SSPA_EN_O	        	;;
-	BCF SSPA_EN_IO	        	;;
+	BSF PS32V_FAULT_IO 		;;
+	;BCF SSPA_EN_O	        	;;
+	;BCF SSPA_EN_IO	        	;;
 	;;PIN22 			;;
-	BCF IOOUT_EN_O	        	;;
-	BCF IOOUT_EN_IO	        	;;
+	;BCF IOOUT_EN_O	        	;;
+	;BCF IOOUT_EN_IO	        ;;
 	;;PIN23 			;;
 	BCF LED_O			;;
 	BCF LED_IO			;;
@@ -1757,6 +1802,11 @@ INIT_IO:				;;
 	BSF I50V_ADI_IO			;;
 	;;PIN23 			;;
 	BSF T50V_ADI_IO			;;
+        ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+        BSET CNPUA,#2                   ;;
+        BSET CNPUA,#3                   ;;
+        BSET CNPDB,#8                   ;;
+        BSET CNPDB,#13                  ;;
 	RETURN				;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1953,6 +2003,7 @@ CHK_U2RX_2:				;;
 	MOV [W1++],W0			;;
         MOV W0,RX_SERIAL_ID             ;;        
 	MOV SERIAL_ID,W2		;;
+        BSET W2,#2                      ;;
 	CP W0,W2			;;
 	BRA Z,CHK_U2RX_3		;;
 	MOV #0xFFFF,W2			;;
@@ -1997,9 +2048,10 @@ CHK_U2RX_3:				;;
 	RETURN				;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-DELAY_ACT_PRG:			;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+DELAY_ACT_PRG:			        ;;
         MOV TMR2,W0                     ;;
-        SUB DELAY_ACT_TIM,WREG         ;;
+        SUB DELAY_ACT_TIM,WREG          ;;
         BTSS W0,#15                     ;;
         RETURN                          ;;  
 	MOV DELAY_ACT,W0		;;
@@ -2015,6 +2067,7 @@ DELAY_ACT_J1:
         MOV #DEVICE_ID_K,W0             ;;
 	MOV W0,TX_DEVICE_ID
         MOV SERIAL_ID,W0
+        BSET W0,#2
 	MOV W0,TX_SERIAL_ID
         MOV #0xAC00,W0
 	MOV W0,TX_GROUP_ID
@@ -2094,6 +2147,8 @@ URXDEC_GETINF_ACT:			;;
 	BRA URXDEC_GETINF_J0		;;0X1000
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 URXDEC_GETINF_J0:			;;
+        CLR NO_U2RX_TIM                 ;;
+        BSF U2RX_CON_F                  ;;
         MOV #10,W0                      ;;
         ADD TMR2,WREG                   ;;
         MOV W0,DELAY_ACT_TIM            ;;
@@ -3220,21 +3275,17 @@ DLYUXI:
 CONVAD_TBL:
         AND #3,W0
         BRA W0
-        RETLW #1,W0
         RETLW #2,W0
         RETLW #3,W0
+        RETLW #4,W0
         RETLW #5,W0
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 CONVERT_AD:				;;
-        CALL FASTAD_PRG                 ;;        
-        ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	MOV CONVAD_CNT,W0 		;;
         LSR W0,#2,W0                    ;;
         CALL CONVAD_TBL                 ;;
-        BTFSS YES_F                     ;;
-        RETURN                          ;;
         CALL AD_STARTX                  ;;
         MOV #ADXBUF00,W1                ;;
 	MOV CONVAD_CNT,W0 		;;
@@ -3242,39 +3293,57 @@ CONVERT_AD:				;;
         ADD W0,W1,W1                    ;;
 	MOV ADC1BUF0,W0			;;
         MOV W0,[W1]                     ;;
-        INC CONVAD_CNT
-        MOV #16,W0
-        CP CONVAD_CNT
-        BRA GEU,$+4
-        RETURN
-        CLR CONVAD_CNT
+        ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	MOV ADC1BUF1,W0			;;I
+        MOV W0,I50BUF                   ;;        
+	MOV ADC1BUF2,W0			;;
+        MOV W0,I32BUF                   ;;
+        ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+        NOP
+        NOP
+        NOP
+        NOP
+        NOP
+        CALL I50_PRG                    ;;
+        CALL I32_PRG                    ;;
+        ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+        INC CONVAD_CNT                  ;;
+        MOV #16,W0                      ;;
+        CP CONVAD_CNT                   ;;
+        BRA GEU,$+4                     ;;
+        RETURN                          ;;
+        CLR CONVAD_CNT                  ;;
         ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	MOVFF ADXBUF00,R0		;;
 	MOVFF ADXBUF01,R1		;;
 	MOVFF ADXBUF02,R2		;;	
 	MOVFF ADXBUF03,R3		;;
 	CALL FILTER			;;
-	MOV W0,T50VADI			;;
+	MOV W0,V50VADI			;;
+        ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	MOVFF ADXBUF10,R0		;;
 	MOVFF ADXBUF11,R1		;;
 	MOVFF ADXBUF12,R2		;;	
 	MOVFF ADXBUF13,R3		;;
 	CALL FILTER			;;
-	MOV W0,V50VADI			;;
+	MOV W0,T32VADI			;;
+        ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	MOVFF ADXBUF20,R0		;;
 	MOVFF ADXBUF21,R1		;;
 	MOVFF ADXBUF22,R2		;;	
 	MOVFF ADXBUF23,R3		;;
 	CALL FILTER			;;
-	MOV W0,T32VADI			;;
+	MOV W0,T50VADI			;;
+        ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	MOVFF ADXBUF30,R0		;;
 	MOVFF ADXBUF31,R1		;;
 	MOVFF ADXBUF32,R2		;;	
 	MOVFF ADXBUF33,R3		;;
 	CALL FILTER			;;
 	MOV W0,V32VADI			;;
-        RETURN
-
+        ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+        RETURN                          ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
         
         
 	AND #3,W0                       ;;
