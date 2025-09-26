@@ -200,6 +200,8 @@ U2RX_PACK_TIME:		.SPACE 2
 U2TX_REPEAT_TIM:       .SPACE 2
 U1TX_REPEAT_TIM:       .SPACE 2
 
+DRVCH_CNT:		.SPACE 2
+
 
 UTX_FLAG:		.SPACE 2
 
@@ -2002,9 +2004,16 @@ INIT_IO:				;;
 	BCF NC55_O			;;
 	BCF NC55_IO			;;
 	;;PIN58 			;;
-        BSF AIR_FLOW_R_IO	        ;;
+        ;BSF AIR_FLOW_R_IO	        ;;
+        BCF DRVCH0_O    	        ;;
+        BCF DRVCH0_IO    	        ;;
 	;;PIN60 			;;
-        BSF AIR_FLOW_L_IO	        ;;
+        ;BSF AIR_FLOW_L_IO	        ;;
+        BCF DRVCH1_O    	        ;;
+        BCF DRVCH1_IO    	        ;;
+
+
+
 	;;PIN61 			;;
 	BSF WGSW_LOAD_IO	        ;;
 	;;PIN62 			;;
@@ -2133,6 +2142,16 @@ SET_ATT:
 
 
 SET_OUT:
+        BTSS DRVCH_CNT,#0
+        BCF DRVCH0_O
+        BTSC DRVCH_CNT,#0
+        BSF DRVCH0_O
+        BTSS DRVCH_CNT,#1
+        BCF DRVCH1_O
+        BTSC DRVCH_CNT,#1
+        BSF DRVCH1_O
+
+
         CLR OUT_FLAG
         BTFSC LOCAL_REMOTE_F
         BSET OUT_FLAG,#0
@@ -2481,6 +2500,15 @@ U1RX_CMD_00J:				;;
         BSET SP4T_CNT,#1
         BTSC R0,#11
         BSET SP4T_CNT,#2
+
+
+        CLR DRVCH_CNT
+        BTSC R1,#12
+        BSET DRVCH_CNT,#0
+        BTSC R1,#13
+        BSET DRVCH_CNT,#1
+
+
         ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	MOV [W1++],W0			;;
         CP WGBUF        

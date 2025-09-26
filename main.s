@@ -3,7 +3,13 @@
 ;Establish Date 2012,7,2
 ;Purpose:Argentina Customer Use
 ;Change To Espanish Language 
+/*
+fiber
+ sw1 1234 must be on,off,on,off        
+ sw2.321 is the cardNo, on=0, off=1,sw2.4 must be 0
+ sw3 must same sw2       
 
+*/
 
 	
  
@@ -12,9 +18,9 @@
         .include "p24ep64gp206.inc"
 
 ;BY DEFINE=============================
-	.EQU JS203_39A_F01_02	,1      ;SSPA DRIVER
+;	.EQU JS203_39A_F01_02	,1      ;SSPA DRIVER
 ;	.EQU JS203_39A_L01_02	,1      ;LA
-;       .EQU JS203_39A_C01_04  ,1       ;FIBER
+        .EQU JS203_39A_C01_04  ,1       ;FIBER
 ;       .EQU JS203_39A_K01_01   ,1      ;io
 ;       .EQU JS203_39A_K01_02   ,1      ;io
 ;       .EQU JS203_39A_M01_01   ,1      ;RF

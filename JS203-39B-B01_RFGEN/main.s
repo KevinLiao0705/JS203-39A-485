@@ -174,7 +174,7 @@ MAX51:			.SPACE 2
 MAX60:			.SPACE 2		
 MAX61:			.SPACE 2		
 
-
+TEST_FREQSET_CNT:       .SPACE 2
 FREQ_SET:		.SPACE 2		
 FREQ_ADJ:		.SPACE 2		
 
@@ -301,31 +301,56 @@ TEST_TIMER:
         CALL DLYMX
         BRA TEST_TIMER
 
+TEST_FREQSET:
+
+
+        BTSS TMR2_FLAG,#12
+        RETURN
+        INC TEST_FREQSET_CNT
+        MOV #10,W0
+        CP TEST_FREQSET_CNT
+        BRA GEU,$+4
+        RETURN
+        CLR TEST_FREQSET_CNT
+        INC WGFREQCH
+        MOV #360,W0
+        CP WGFREQCH
+        BRA GEU,$+4
+        RETURN
+        MOVLF #280,WGFREQCH
+        RETURN
+
+        
+
 MAIN:
         MOVLF #0,MY_SLOT_ID
-        MOVLF #330,FREQ_SET
+        MOVLF #320,FREQ_SET
+
+        ;MOVLF #280,FREQ_SET
+        ;MOVLF #317,FREQ_SET
+
         MOVLF #0,FREQ_ADJ
         CALL SET_FREQ
         MOVFF FREQ_SET,WGFREQCH
 MAIN_LOOP:
         CLRWDT
-        CALL TMR2PRG	;	
+        CALL TMR2PRG	                ;	
         BTSS TMR2_BUF,#14
         BSF LED_O
         BTSC TMR2_BUF,#14
         BCF LED_O
-
-
+        ;CALL TEST_FREQSET
         MOV WGFREQCH,W0
         CP FREQ_SET
         BRA Z,MAIN_1
         NOP
         NOP
+        NOP
+        NOP
+        NOP
         MOV W0,FREQ_SET
         MOVLF #0,FREQ_ADJ               ;;
         CALL SET_FREQ
-
-
 MAIN_1:
         CALL CHK_U1RX
         BRA MAIN_LOOP
@@ -844,10 +869,10 @@ LOAD_MAX_REG:
         ;=====================
         CLR MAX00
         CLR MAX01
-        ;
+        
         BTSC MAX_INT,#0
         BSET MAX01,#15
-        ;        
+                
         MOV MAX_N,W0
         LSR W0,#1,W0
         IOR MAX01
@@ -861,7 +886,14 @@ LOAD_MAX_REG:
         ;======================
         CLR MAX11
         MOVLF #1,MAX10
-        ;
+
+
+        ;MOV #31,W0
+        ;SL W0,#3,W0
+        ;IOR MAX10
+        
+
+        
         BTSC MAX_RES0,#0
         BSET MAX11,#15
         ;

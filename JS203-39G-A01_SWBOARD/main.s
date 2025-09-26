@@ -25,7 +25,7 @@
 	.EQU	VER0_K		,'1'
 	.EQU	VER1_K		,'0'
 
-        .EQU    DEVICE_ID_K             ,0x2537 ;
+        .EQU    DEVICE_ID_K             ,0x1737 ;
         .EQU    SON_DEVICE_ID_K         ,0x2538 ;
 	.EQU 	DEBUG_SLOT_ID_K	        ,0x0001
 	.EQU 	SERIAL_ID_K		,0x0000
@@ -172,6 +172,12 @@ DEBUG_CNT1:		.SPACE 2
 DEBUG_CNT2:		.SPACE 2
 DEBUG_CNT3:		.SPACE 2
 DEBUG_CNT4:		.SPACE 2
+
+TEST_CNT:		.SPACE 2
+FLASH_CNT:		.SPACE 2
+
+LED_FLAG0:		.SPACE 2
+LED_FLAG1:		.SPACE 2
 
 
 
@@ -556,8 +562,8 @@ sspaModuleTemprAA[2][36];   12BIT
 .EQU OK_F_P		,9
 .EQU DONE_F		,FLAGA
 .EQU DONE_F_P		,10
-;.EQU OK_F		,FLAGA
-;.EQU OK_F_P		,11
+.EQU FLASH_F		,FLAGA
+.EQU FLASH_F_P		,11
 ;EQU AICIO_AB_F		,FLAGA
 ;EQU AICIO_AB_F_P  	,12
 .EQU MASTER_U1RX_F	,FLAGA
@@ -755,6 +761,7 @@ WAIT_POWER:			;;
         ;CALL GETSW             ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
         ;CALL TEST_FIB_TX       ;;
+        ;CALL TEST_LED
 	MOV #10,W0		;;
 	CALL DLYMX		;;
 	GOTO MAIN		;;
@@ -1203,9 +1210,19 @@ TIMEACT_PRG:				;;
         INC URX_CON_TIM                 ;;
         MOV #1000,W0                    ;;
         CP URX_CON_TIM                  ;;
-        BRA GEU,$+4                     ;;
-        RETURN                          ;;
-        CLR LED_FLAG                    ;;
+        BRA LTU,TIMEACT_1               ;;
+        CLR LED_FLAG0                   ;;
+        CLR LED_FLAG1                   ;;
+        ;BSET LED_FLAG0,#15               ;;
+        ;BSET LED_FLAG1,#15               ;;
+TIMEACT_1:
+        INC FLASH_CNT
+        MOV #200,W0
+        CP FLASH_CNT
+        BRA LTU,$+6
+        TG FLASH_F
+        CLR FLASH_CNT
+
 	RETURN                          ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1727,8 +1744,7 @@ EMU_PULSE_IN_PRG:
         BCF TP1_O
         RETURN
 
-
-TEST_LED:
+OFF_ALL_LED:
         BCF LED1_O
         BCF LED2_O
         BCF LED3_O
@@ -1737,17 +1753,15 @@ TEST_LED:
         BCF LED6_O
         BCF LED7_O
         BCF LED8_O
-
         BCF SWLED1_O
         BCF SWLED2_O
         BCF SWLED3_O
         BCF SWLED4_O
         BCF SWLED5_O
         BCF SWLED6_O
-
-        MOV #100,W0
-        CALL DLYMX
+        RETURN
         
+ON_ALL_LED:
         BSF LED1_O
         BSF LED2_O
         BSF LED3_O
@@ -1763,15 +1777,216 @@ TEST_LED:
         BSF SWLED4_O
         BSF SWLED5_O
         BSF SWLED6_O
+        RETURN
 
-        MOV #100,W0
+
+LED_PRG:
+        BTFSS FLASH_F
+        BRA LED_PRG_1
+        BTSC LED_FLAG1,#0
+        BCF SWLED1_O
+        BTSC LED_FLAG1,#1
+        BCF SWLED2_O
+        BTSC LED_FLAG1,#2
+        BCF SWLED3_O
+        BTSC LED_FLAG1,#3
+        BCF SWLED4_O
+        BTSC LED_FLAG1,#4
+        BCF SWLED5_O
+        BTSC LED_FLAG1,#5
+        BCF SWLED6_O
+        BTSC LED_FLAG1,#8
+        BCF LED8_O
+        BTSC LED_FLAG1,#9
+        BCF LED7_O
+        BTSC LED_FLAG1,#10
+        BCF LED6_O
+        BTSC LED_FLAG1,#11
+        BCF LED5_O
+        BTSC LED_FLAG1,#12
+        BCF LED4_O
+        BTSC LED_FLAG1,#13
+        BCF LED3_O
+        BTSC LED_FLAG1,#14
+        BCF LED2_O
+        BTSC LED_FLAG1,#15
+        BCF LED1_O
+        RETURN
+LED_PRG_1:
+        BTSS LED_FLAG0,#0
+        BCF SWLED1_O
+        BTSC LED_FLAG0,#0
+        BSF SWLED1_O
+
+        BTSS LED_FLAG0,#1
+        BCF SWLED2_O
+        BTSC LED_FLAG0,#1
+        BSF SWLED2_O
+
+        BTSS LED_FLAG0,#2
+        BCF SWLED3_O
+        BTSC LED_FLAG0,#2
+        BSF SWLED3_O
+
+        BTSS LED_FLAG0,#3
+        BCF SWLED4_O
+        BTSC LED_FLAG0,#3
+        BSF SWLED4_O
+
+        BTSS LED_FLAG0,#4
+        BCF SWLED5_O
+        BTSC LED_FLAG0,#4
+        BSF SWLED5_O
+
+        BTSS LED_FLAG0,#5
+        BCF SWLED6_O
+        BTSC LED_FLAG0,#5
+        BSF SWLED6_O
+
+        BTSS LED_FLAG0,#8
+        BCF LED8_O
+        BTSC LED_FLAG0,#8
+        BSF LED8_O
+
+        BTSS LED_FLAG0,#9
+        BCF LED7_O
+        BTSC LED_FLAG0,#9
+        BSF LED7_O
+
+        BTSS LED_FLAG0,#10
+        BCF LED6_O
+        BTSC LED_FLAG0,#10
+        BSF LED6_O
+
+        BTSS LED_FLAG0,#11
+        BCF LED5_O
+        BTSC LED_FLAG0,#11
+        BSF LED5_O
+
+        BTSS LED_FLAG0,#12
+        BCF LED4_O
+        BTSC LED_FLAG0,#12
+        BSF LED4_O
+
+        BTSS LED_FLAG0,#13
+        BCF LED3_O
+        BTSC LED_FLAG0,#13
+        BSF LED3_O
+
+        BTSS LED_FLAG0,#14
+        BCF LED2_O
+        BTSC LED_FLAG0,#14
+        BSF LED2_O
+
+        BTSS LED_FLAG0,#15
+        BCF LED1_O
+        BTSC LED_FLAG0,#15
+        BSF LED1_O
+
+        RETURN
+
+
+
+
+
+ 
+
+
+TEST_LED:
+        CALL ON_ALL_LED
+        MOV #1000,W0
         CALL DLYMX
+        CALL OFF_ALL_LED
+        MOV #500,W0
+        CALL DLYMX
+        CLR TEST_CNT
+TEST_LED_1:
+        CALL SHIFT_LED
+        MOV #150,W0
+        CALL DLYMX
+        INC TEST_CNT
+        MOV #15,W0
+        CP TEST_CNT
+        BRA LTU,TEST_LED_1
+        RETURN
         
-        BRA TEST_LED
+
+SHIFT_LED:
+        CALL OFF_ALL_LED
+        MOV TEST_CNT,W0
+        AND #15,W0
+        BRA W0
+        BRA LED_TEST_J0
+        BRA LED_TEST_J1
+        BRA LED_TEST_J2
+        BRA LED_TEST_J3
+        BRA LED_TEST_J4
+        BRA LED_TEST_J5
+        BRA LED_TEST_J6
+        BRA LED_TEST_J7
+        BRA LED_TEST_J8
+        BRA LED_TEST_J9
+        BRA LED_TEST_J10
+        BRA LED_TEST_J11
+        BRA LED_TEST_J12
+        BRA LED_TEST_J13
+        BRA LED_TEST_J14
+        BRA LED_TEST_J15
+
+LED_TEST_J0:
+        BSF SWLED1_O
+        RETURN        
+LED_TEST_J1:
+        BSF SWLED2_O
+        RETURN        
+LED_TEST_J2:
+        BSF SWLED3_O
+        RETURN        
+LED_TEST_J3:
+        BSF SWLED4_O
+        RETURN        
+LED_TEST_J4:
+        BSF SWLED5_O
+        RETURN        
+LED_TEST_J5:
+        BSF SWLED6_O
+        RETURN        
+LED_TEST_J6:
+        BSF LED8_O
+        RETURN        
+LED_TEST_J7:
+        BSF LED7_O
+        RETURN        
+LED_TEST_J8:
+        BSF LED6_O
+        RETURN        
+LED_TEST_J9:
+        BSF LED5_O
+        RETURN        
+LED_TEST_J10:
+        BSF LED4_O
+        RETURN        
+LED_TEST_J11:
+        BSF LED3_O
+        RETURN        
+LED_TEST_J12:
+        BSF LED2_O
+        RETURN        
+LED_TEST_J13:
+        BSF LED1_O
+        RETURN        
+LED_TEST_J14:
+        RETURN        
+LED_TEST_J15:
+        RETURN        
+
+
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 MAIN:	                                ;;
         CALL INIT_RAM   		;;
+        CALL TEST_LED                   ;;
 	BSF U1RX_EN_F			;;
 	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 MAIN_LOOP:				;;
@@ -1791,7 +2006,7 @@ MAIN_LOOP:				;;
         ;=================================
 	BRA MAIN_LOOP			;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-LED_PRG:
+LED_PRGXX:
         BTSC LED_FLAG,#0
         BSF LED1_O
         BTSS LED_FLAG,#0
@@ -1879,7 +2094,11 @@ TRANS_KEY:                              ;;
         CP0 R0                          ;;
         BRA NZ,$+4                      ;;
         RETURN                          ;;                
-        MOVFF R0,SWCMD                  ;;      
+        MOVFF R0,SWCMD                  ;;0X01:0x02:0x03:0x04:0x05:0x06 POWER,LOCAL/REMOTE      
+        NOP                             ;;.ENABLE,RADIATION,ANT,EMERGENCY
+        NOP
+        NOP
+        NOP
         RETURN                          ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 GET_KEYDATA:				;;
@@ -2002,11 +2221,11 @@ U1TX_PRG:                               ;;
         BTSS W0,#15                     ;;
         RETURN                          ;;
         ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-U1TX_PRG_1:                              ;;
-        MOV #0X2536,W0                  ;;
+U1TX_PRG_1:                             ;;
+        MOV #DEVICE_ID_K,W0             ;;
 	MOV W0,TX_DEVICE_ID             ;;
         CLR TX_SERIAL_ID                ;;
-        MOV #0xAC00,W0                  ;;
+        MOV #0xAB00,W0                  ;;
 	MOV W0,TX_GROUP_ID              ;;
         ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	MOV #0x1000,W0                  ;;
@@ -2109,7 +2328,7 @@ CHK_U1RX_1:				;;
 	MOV W1,RX_ADDR			;;
 	MOV [W1++],W0			;;
 	MOV W0,RX_DEVICE_ID		;;
-	MOV #0x2536,W2	                ;;
+	MOV #0x2403,W2	                ;;
 	CP W0,W2			;;
 	BRA Z,CHK_U1RX_2		;;
 	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;	
@@ -2135,13 +2354,13 @@ CHK_U1RX_3:				;;
 	MOV [W1++],W0			;;
 	MOV W0,RX_CMD			;;
 	MOV [W1++],W0			;;
-	MOV W0,RX_PARA0			;;systemStatus0L
+	MOV W0,RX_PARA0			;;
 	MOV [W1++],W0			;;
-	MOV W0,RX_PARA1			;;systemStatus0H
+	MOV W0,RX_PARA1			;;
 	MOV [W1++],W0			;;
-	MOV W0,RX_PARA2			;;systemFlag0L
+	MOV W0,RX_PARA2			;;
 	MOV [W1++],W0			;;
-	MOV W0,RX_PARA3			;;systemFlag0H
+	MOV W0,RX_PARA3			;;
 	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	MOV RX_CMD,W0			;;	
 	SWAP W0				;;
@@ -2194,7 +2413,9 @@ URXDEC_CMD_ACT:			        ;;
         RETURN                          ;;        
 U1RX_CMD_00J:				;;
         MOV RX_PARA0,W0                 ;;
-        MOV W0,LED_FLAG                 ;;
+        MOV W0,LED_FLAG0                ;;
+        MOV RX_PARA1,W0                 ;;
+        MOV W0,LED_FLAG1                ;;
         CLR URX_CON_TIM                 ;;
         RETURN                          ;;
 U1RX_CMD_01J:				;;
